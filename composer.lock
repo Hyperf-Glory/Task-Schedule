@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "22f4edf2a4d89ef048993d134d6b878d",
+    "content-hash": "9135164dcb6750821547955fac649cfc",
     "packages": [
         {
             "name": "bandwidth-throttle/token-bucket",
@@ -1261,6 +1261,61 @@
                 "swoole"
             ],
             "time": "2021-01-11T10:03:17+00:00"
+        },
+        {
+            "name": "hyperf/dag-incubator",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hyperf/dag-incubator.git",
+                "reference": "36252ccfbcc2b3b3d8b578c6c6879cd4cad66ed8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hyperf/dag-incubator/zipball/36252ccfbcc2b3b3d8b578c6c6879cd4cad66ed8",
+                "reference": "36252ccfbcc2b3b3d8b578c6c6879cd4cad66ed8",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "hyperf/utils": "~2.1.0",
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.14",
+                "hyperf/testing": "^2.1",
+                "mockery/mockery": "^1.0",
+                "phpstan/phpstan": "^0.12",
+                "swoole/ide-helper": "dev-master",
+                "swow/swow": "dev-develop",
+                "symfony/var-dumper": "^5.1"
+            },
+            "type": "library",
+            "extra": {
+                "hyperf": {
+                    "config": "Hyperf\\Dag\\ConfigProvider"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Hyperf\\Dag\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Dag runner for hyperf",
+            "keywords": [
+                "hyperf",
+                "php"
+            ],
+            "time": "2021-01-30T14:58:12+00:00"
         },
         {
             "name": "hyperf/database",
@@ -9889,7 +9944,7 @@
         "ext-json": "*",
         "ext-pdo": "*",
         "ext-redis": "*",
-        "ext-swoole": ">=4.5",
+        "ext-swoole": ">=4.6",
         "ext-zip": "*"
     },
     "platform-dev": [],
