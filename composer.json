@@ -34,6 +34,7 @@
         "hyperf/logger": "2.1.*",
         "hyperf/memory": "2.1.*",
         "hyperf/model-cache": "2.1.*",
+        "hyperf/nsq": "^2.1",
         "hyperf/process": "2.1.*",
         "hyperf/rate-limit": "2.1.*",
         "hyperf/redis": "2.1.*",
