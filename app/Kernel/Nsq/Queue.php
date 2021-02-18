@@ -6,7 +6,6 @@ use App\Constants\Serializer;
 use App\Schedule\AbstractQueue;
 use App\Schedule\JobInterface;
 use InvalidArgumentException;
-use Throwable;
 
 class Queue extends AbstractQueue
 {
@@ -30,15 +29,15 @@ class Queue extends AbstractQueue
 
         $status = self::STATUS_DONE;
 
-        if ($redis->hexists("{$this->channelPrefix}{$this->channel}:messages", $id)) {
+        if ($redis->hexists("{$this->topic}{$this->channel}:messages", $id)) {
             $status = self::STATUS_WAITING;
         }
 
-        if ($redis->zscore("{$this->channelPrefix}{$this->channel}:reserved", $id)) {
+        if ($redis->zscore("{$this->topic}{$this->channel}:reserved", $id)) {
             $status = self::STATUS_RESERVED;
         }
 
-        if ($redis->hexists("{$this->channelPrefix}{$this->channel}:failed", $id)) {
+        if ($redis->hexists("{$this->topic}{$this->channel}:failed", $id)) {
             $status = self::STATUS_FAILED;
         }
 
@@ -47,11 +46,10 @@ class Queue extends AbstractQueue
 
     /**
      * @param \App\Schedule\JobInterface|\Closure $message
-     * @param int                                 $defer
+     * @param float                               $defer
      *
-     * @throws \JsonException
      */
-    public function push($message, int $defer = 0) : void
+    public function push($message, float $defer = 0) : void
     {
         $serializedMessage = null;
         $serializerType    = null;
@@ -60,7 +58,6 @@ class Queue extends AbstractQueue
             $serializedMessage = $this->closureSerializer->normalize($message);
             $serializerType    = Serializer::SERIALIZER_TYPE_CLOSURE;
         } elseif ($message instanceof JobInterface) {
-
             $serializedMessage = $this->phpSerializer->normalize($message);
             $serializerType    = Serializer::SERIALIZER_TYPE_PHP;
         } else {
@@ -68,34 +65,34 @@ class Queue extends AbstractQueue
             throw new InvalidArgumentException($type . ' type message is not allowed.');
         }
 
-        $pushMessage = json_encode([
+        $pushMessage = $this->jsonSerializer->normalize([
             'serializerType'    => $serializerType,
-            'serializedMessage' => $serializedMessage,
-        ], JSON_THROW_ON_ERROR);
+            'serializedMessage' => $serializedMessage
+        ]);
 
         //Use Redis to store records and statistics
         $redis = $this->redis();
-        $id    = $redis->incr("{$this->channelPrefix}{$this->channel}:message_id");
-        $redis->hset("{$this->channelPrefix}{$this->channel}:messages", $id, $pushMessage);
+        $id    = $redis->incr("{$this->topic}{$this->channel}:message_id");
+        $redis->hset("{$this->topic}{$this->channel}:messages", (string)$id, $pushMessage);
 
         if ($defer > 0) {
-            $redis->zadd("{$this->channelPrefix}{$this->channel}:delayed", $id, time() + $defer);
+            $redis->zadd("{$this->topic}{$this->channel}:delayed", $id, time() + $defer);
         } else {
-            $redis->lpush("{$this->channelPrefix}{$this->channel}:waiting", $id);
+            $redis->lpush("{$this->topic}{$this->channel}:waiting", $id);
         }
 
         //push nsqd
         $nsq = $this->nsq();
         try {
-            if (!$nsq->publish($this->channelPrefix . $this->channel, json_encode([
+            if (!$nsq->publish($this->topic . $this->channel, $this->jsonSerializer->normalize([
                 'id'                => $id,
                 'serializerType'    => $serializerType,
                 'serializedMessage' => $serializedMessage,
-            ], JSON_THROW_ON_ERROR), $defer)) {
-                $this->logger->debug(sprintf('Debug when job push: [%s] [%s] fail.', $serializerType, $serializedMessage));
+            ]), $defer)) {
+                $this->logger->debug(sprintf('Debug when job push: [%s] fail.', $serializerType));
             }
-        } catch (Throwable $e) {
-            $this->logger->error(sprintf('Error when job push: [%s] [%s] fail.Message: [%s]', $serializerType, $serializedMessage, $e->getMessage()));
+        } catch (\Throwable $e) {
+            $this->logger->error(sprintf('Error when job push: [%s] fail.Message: [%s]', $serializerType, $e->getMessage()));
         }
     }
 

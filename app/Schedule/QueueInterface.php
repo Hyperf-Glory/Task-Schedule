@@ -27,11 +27,11 @@ interface QueueInterface
      * Push an executable job message into queue.
      *
      * @param \Closure|JobInterface $message
-     * @param int                   $defer
+     * @param float                 $defer
      *
      * @throws \Throwable
      */
-    public function push($message, int $defer = 0) : void;
+    public function push($message, float $defer = 0.0) : void;
 
     /**
      * Remove specific job from current queue.

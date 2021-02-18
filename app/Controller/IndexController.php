@@ -3,6 +3,8 @@ declare(strict_types = 1);
 
 namespace App\Controller;
 
+use App\Job\SimpleJob;
+use App\Kernel\Nsq\Queue;
 use App\Model\Task;
 use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
@@ -150,4 +152,17 @@ class IndexController extends AbstractController
         return $tree;
     }
 
+    public function queue()
+    {
+        $task = Task::find(1);
+
+        $job = new SimpleJob($task);
+
+        $queue = new Queue('queue');
+        try {
+            $queue->push($job, 0);
+        } catch (\JsonException $e) {
+
+        }
+    }
 }

@@ -3,13 +3,13 @@ declare(strict_types = 1);
 
 namespace App\Schedule;
 
-use Hyperf\Contract\NormalizerInterface;
+use App\Component\Serializer\JsonSerializer;
+use App\Component\Serializer\ObjectSerializer;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Nsq\Nsq;
 use Hyperf\Redis\RedisFactory;
 use Hyperf\Redis\RedisProxy;
 use Hyperf\Utils\ApplicationContext;
-use Hyperf\Utils\Serializer\SymfonyNormalizer;
 use App\Component\Serializer\ClosureSerializer;
 
 abstract class AbstractQueue implements QueueInterface
@@ -17,7 +17,7 @@ abstract class AbstractQueue implements QueueInterface
     /**
      * @var string
      */
-    protected $channelPrefix = 'task-schedule:';
+    protected $topic = 'task-schedule-';
 
     /**
      * @var string
@@ -43,7 +43,7 @@ abstract class AbstractQueue implements QueueInterface
     public const STATUS_FAILED = 4;
 
     /**
-     * @var SymfonyNormalizer
+     * @var ObjectSerializer
      */
     protected $phpSerializer;
 
@@ -53,21 +53,27 @@ abstract class AbstractQueue implements QueueInterface
     protected $closureSerializer;
 
     /**
-     * @var array
+     * @var
      */
-    protected $options;
+    protected $jsonSerializer;
+
+    /**
+     * @var string
+     */
+    protected $redisPool;
 
     /**
      * @var StdoutLoggerInterface
      */
     protected $logger;
 
-    public function __construct(string $channel, array $options = [])
+    public function __construct(string $channel, string $redisPool = 'default')
     {
         $this->channel           = $channel;
-        $this->options           = $options;
-        $this->phpSerializer     = ApplicationContext::getContainer()->get(NormalizerInterface::class);
-        $this->closureSerializer = new ClosureSerializer();
+        $this->redisPool         = $redisPool;
+        $this->phpSerializer     = make(ObjectSerializer::class);
+        $this->closureSerializer = make(ClosureSerializer::class);
+        $this->jsonSerializer    = make(JsonSerializer::class);
         $this->logger            = ApplicationContext::getContainer()->get(StdoutLoggerInterface::class);
     }
 
@@ -76,7 +82,7 @@ abstract class AbstractQueue implements QueueInterface
      */
     protected function redis() : RedisProxy
     {
-        return ApplicationContext::getContainer()->get(RedisFactory::class)->get($this->options['connection']);
+        return ApplicationContext::getContainer()->get(RedisFactory::class)->get($this->redisPool);
     }
 
     /**
