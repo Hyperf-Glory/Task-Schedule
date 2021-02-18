@@ -6,6 +6,7 @@ use App\Constants\Serializer;
 use App\Schedule\AbstractQueue;
 use App\Schedule\JobInterface;
 use InvalidArgumentException;
+use Throwable;
 
 class Queue extends AbstractQueue
 {
@@ -78,7 +79,7 @@ class Queue extends AbstractQueue
         $redis->hset("{$this->channelPrefix}{$this->channel}:messages", $id, $pushMessage);
 
         if ($defer > 0) {
-            $redis->zadd("{$this->channelPrefix}{$this->channel}:delayed", $id, time() + $delay);
+            $redis->zadd("{$this->channelPrefix}{$this->channel}:delayed", $id, time() + $defer);
         } else {
             $redis->lpush("{$this->channelPrefix}{$this->channel}:waiting", $id);
         }
@@ -93,7 +94,7 @@ class Queue extends AbstractQueue
             ], JSON_THROW_ON_ERROR), $defer)) {
                 $this->logger->debug(sprintf('Debug when job push: [%s] [%s] fail.', $serializerType, $serializedMessage));
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error(sprintf('Error when job push: [%s] [%s] fail.Message: [%s]', $serializerType, $serializedMessage, $e->getMessage()));
         }
     }
