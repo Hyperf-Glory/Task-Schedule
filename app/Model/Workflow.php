@@ -1,15 +1,15 @@
 <?php
 
-declare (strict_types=1);
+declare (strict_types = 1);
 namespace App\Model;
 
 /**
- * @property int $id 
- * @property string $name 
- * @property int $is_active 
- * @property string $status 
- * @property \Carbon\Carbon $created_at 
- * @property \Carbon\Carbon $updated_at 
+ * @property int            $id
+ * @property string         $name
+ * @property int            $is_active
+ * @property string         $status
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  */
 class Workflow extends Model
 {

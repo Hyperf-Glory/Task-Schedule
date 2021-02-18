@@ -1,13 +1,13 @@
 <?php
 
-declare (strict_types=1);
+declare (strict_types = 1);
 namespace App\Model;
 
 /**
- * @property int $id 
- * @property int $workflow_id 
- * @property int $task_id 
- * @property int $pid 
+ * @property int $id
+ * @property int $workflow_id
+ * @property int $task_id
+ * @property int $pid
  */
 class VertexEdge extends Model
 {

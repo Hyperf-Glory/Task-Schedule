@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace App\Kernel\Log;
 
-use App\Constants\Log;
 use Hyperf\Utils\Context;
 use Monolog\Processor\ProcessorInterface;
 

@@ -1,17 +1,17 @@
 <?php
 
-declare (strict_types=1);
+declare (strict_types = 1);
 namespace App\Model;
 
 /**
- * @property int $id 
- * @property int $workflow_id 
- * @property string $name 
- * @property string $status 
- * @property string $result 
- * @property string $parents 
- * @property \Carbon\Carbon $created_at 
- * @property \Carbon\Carbon $updated_at 
+ * @property int            $id
+ * @property int            $workflow_id
+ * @property string         $name
+ * @property string         $status
+ * @property string         $result
+ * @property string         $parents
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  */
 class Task extends Model
 {

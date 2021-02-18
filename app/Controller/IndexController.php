@@ -93,10 +93,13 @@ class IndexController extends AbstractController
             ->addEdge($g, $i);
 
         // 需要在协程环境下执行
-        $dag->run();
+        try {
+            $dag->run();
+        } catch (\Throwable $e) {
+        }
     }
 
-    public function test()
+    public function test() : void
     {
         $dag   = new Dag();
         $start = Vertex::make(function ()
