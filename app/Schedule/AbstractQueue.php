@@ -17,12 +17,12 @@ abstract class AbstractQueue implements QueueInterface
     /**
      * @var string
      */
-    protected $topic = 'task-schedule-';
+    protected $topic = 'task-schedule';
 
-    /**
+    /**`
      * @var string
      */
-    protected $channel = 'default';
+    protected $channel = 'queue';
 
     /**
      * @see AbstractQueue::isWaiting()
@@ -90,6 +90,7 @@ abstract class AbstractQueue implements QueueInterface
      */
     protected function nsq() : Nsq
     {
+        //or make(Nsq::class,[......])
         return ApplicationContext::getContainer()->get(Nsq::class);
     }
 
@@ -155,4 +156,13 @@ abstract class AbstractQueue implements QueueInterface
     {
         return self::STATUS_FAILED === $this->getStatus($id);
     }
+
+    /**
+     * @return string
+     */
+    public function getTopic() : string
+    {
+        return $this->topic;
+    }
+
 }

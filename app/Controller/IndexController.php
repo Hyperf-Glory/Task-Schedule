@@ -159,10 +159,6 @@ class IndexController extends AbstractController
         $job = new SimpleJob($task);
 
         $queue = new Queue('queue');
-        try {
-            $queue->push($job, 0);
-        } catch (\JsonException $e) {
-
-        }
+        $queue->push($job, 0);
     }
 }

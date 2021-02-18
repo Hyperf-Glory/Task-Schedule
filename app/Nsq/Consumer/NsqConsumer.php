@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace App\Nsq\Consumer;
 
+use App\Constants\Serializer;
 use App\Schedule\JobInterface;
 use Hyperf\Nsq\AbstractConsumer;
 use Hyperf\Nsq\Annotation\Consumer;
@@ -13,12 +14,40 @@ use App\Component\Serializer\JsonSerializer;
 use App\Component\Serializer\ObjectSerializer;
 use InvalidArgumentException;
 use Hyperf\Utils\Pipeline;
+use Psr\Container\ContainerInterface;
+use App\Kernel\Nsq\Queue;
+use ReflectionClass;
 
 /**
- * @Consumer(topic="task-schedule-queue", channel="task-schedule", name ="NsqConsumer", nums=1)
+ * @Consumer()
  */
 class NsqConsumer extends AbstractConsumer
 {
+    /**
+     * @var Queue
+     */
+    protected $queue;
+
+    /**
+     * @var string
+     */
+    protected $channel = 'queue';
+
+    public function __construct(ContainerInterface $container)
+    {
+        parent::__construct($container);
+        $this->queue = make(Queue::class, [
+            'channel' => $this->channel
+        ]);
+        $this->setTopic($this->queue->getTopic());
+        $this->setChannel($this->queue->getChannel());
+        $this->setName($this->getShortCLassName());
+        $this->setNums(1);
+        $this->jsonSerializer   = $this->container->get(JsonSerializer::class);
+        $this->objectSerializer = $this->container->get(ObjectSerializer::class);
+        $this->pipeline         = $this->container->get(Pipeline::class);
+    }
+
     /**
      * @var JsonSerializer
      */
@@ -37,21 +66,24 @@ class NsqConsumer extends AbstractConsumer
     public function consume(Message $message) : ?string
     {
 
-        $this->jsonSerializer   = $this->container->get(JsonSerializer::class);
-        $this->objectSerializer = $this->container->get(ObjectSerializer::class);
-        $this->pipeline         = $this->container->get(Pipeline::class);
-        $body                   = $this->jsonSerializer->denormalize($message->getBody());
-        if ($job = $this->objectSerializer->denormalize($body['serializedMessage'])) {
-            $this->handle($job);
+        ['id' => $id, 'serializerType' => $type, 'serializedMessage' => $body] = $this->jsonSerializer->denormalize($message->getBody());
+        if ((int)$id >= 0 && ($job = $this->objectSerializer->denormalize($body)) && in_array($type, [
+                Serializer::SERIALIZER_TYPE_CLOSURE,
+                Serializer::SERIALIZER_TYPE_PHP
+            ], true)) {
+            $this->handle((int)$id, $job);
         }
 
         return Result::ACK;
     }
 
     /**
+     * The processing logic for the current task
+     *
+     * @param int                   $id
      * @param JobInterface|\Closure $handler
      */
-    protected function handle($handler) : void
+    protected function handle(int $id, $handler) : void
     {
         try {
             if (empty($handler)) {
@@ -63,8 +95,19 @@ class NsqConsumer extends AbstractConsumer
                                                                 {
                                                                     $job->handle();
                                                                 });
+            $this->queue->remove($id);
         } catch (\Throwable $throwable) {
 
         }
+    }
+
+    /**
+     * Gets the current class name
+     *
+     * @return string
+     */
+    protected function getShortCLassName() : string
+    {
+        return (new ReflectionClass($this))->getShortName();
     }
 }
