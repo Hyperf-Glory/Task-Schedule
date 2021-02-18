@@ -46,11 +46,11 @@ class Queue extends AbstractQueue
 
     /**
      * @param \App\Schedule\JobInterface|\Closure $message
-     * @param int                                 $delay
+     * @param int                                 $defer
      *
      * @throws \JsonException
      */
-    public function push($message, int $delay = 0) : void
+    public function push($message, int $defer = 0) : void
     {
         $serializedMessage = null;
         $serializerType    = null;
@@ -77,7 +77,7 @@ class Queue extends AbstractQueue
         $id    = $redis->incr("{$this->channelPrefix}{$this->channel}:message_id");
         $redis->hset("{$this->channelPrefix}{$this->channel}:messages", $id, $pushMessage);
 
-        if ($delay > 0) {
+        if ($defer > 0) {
             $redis->zadd("{$this->channelPrefix}{$this->channel}:delayed", $id, time() + $delay);
         } else {
             $redis->lpush("{$this->channelPrefix}{$this->channel}:waiting", $id);
@@ -90,11 +90,11 @@ class Queue extends AbstractQueue
                 'id'                => $id,
                 'serializerType'    => $serializerType,
                 'serializedMessage' => $serializedMessage,
-            ], JSON_THROW_ON_ERROR))) {
+            ], JSON_THROW_ON_ERROR), $defer)) {
                 $this->logger->debug(sprintf('Debug when job push: [%s] [%s] fail.', $serializerType, $serializedMessage));
             }
         } catch (\Throwable $e) {
-            $this->logger->error(sprintf('Error when job push: [%s] [%s] fail.', $serializerType, $serializedMessage));
+            $this->logger->error(sprintf('Error when job push: [%s] [%s] fail.Message: [%s]', $serializerType, $serializedMessage, $e->getMessage()));
         }
     }
 
