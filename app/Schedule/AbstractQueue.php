@@ -53,7 +53,7 @@ abstract class AbstractQueue implements QueueInterface
     protected $closureSerializer;
 
     /**
-     * @var
+     * @var JsonSerializer
      */
     protected $jsonSerializer;
 
