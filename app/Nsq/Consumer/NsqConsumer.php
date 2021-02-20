@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace App\Nsq\Consumer;
 
 use App\Schedule\JobInterface;
+use Carbon\Carbon;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Nsq\AbstractConsumer;
 use Hyperf\Nsq\Annotation\Consumer;
@@ -19,6 +20,7 @@ use Hyperf\Utils\Pipeline;
 use Psr\Container\ContainerInterface;
 use App\Kernel\Nsq\Queue;
 use ReflectionClass;
+use Swoole\Timer;
 use Throwable;
 
 /**
@@ -56,6 +58,16 @@ class NsqConsumer extends AbstractConsumer
      */
     protected $pipeline;
 
+    /**
+     * @var int
+     */
+    protected $timerId;
+
+    /**
+     * @var int
+     */
+    protected $interval = 10000;
+
     public function __construct(ContainerInterface $container)
     {
         parent::__construct($container);
@@ -66,6 +78,10 @@ class NsqConsumer extends AbstractConsumer
         $this->setChannel($this->queue->getChannel());
         $this->setName($this->getShortCLassName());
         $this->setNums(1);
+        $this->timerId          = Timer::tick($this->interval, function ()
+        {
+            $this->tick();
+        });
         $this->jsonSerializer   = $this->container->get(JsonSerializer::class);
         $this->objectSerializer = $this->container->get(ObjectSerializer::class);
         $this->pipeline         = $this->container->get(Pipeline::class);
@@ -176,5 +192,11 @@ class NsqConsumer extends AbstractConsumer
     protected function getShortCLassName() : string
     {
         return (new ReflectionClass($this))->getShortName();
+    }
+
+    protected function tick() : void
+    {
+        $this->logger->info(sprintf('TimerTick#[%s] Execute Time:%s', $this->timerId, Carbon::now()->toDateTimeString()));
+        $this->queue->migrateExpired();
     }
 }

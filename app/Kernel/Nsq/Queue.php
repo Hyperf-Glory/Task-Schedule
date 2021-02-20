@@ -20,6 +20,12 @@ class Queue extends AbstractQueue
      */
     public function migrateExpired() : void
     {
+        $redis = $this->redis();
+        $redis->eval(LuaScript::migrateExpiredJobs(), [
+            $this->redisKey() . ":delayed",
+            $this->redisKey() . ":waiting",
+            time()
+        ], 2);
     }
 
     /**
@@ -200,6 +206,18 @@ class Queue extends AbstractQueue
      */
     public function getFailed() : array
     {
+        $redis = $this->redis();
+
+        $failedJobs = [];
+        $cursor     = 0;
+        do {
+            [$cursor, $data] = $redis->hscan($this->redisKey() . ":failed", $cursor, [
+                'COUNT' => 10,
+            ]);
+            $failedJobs += $data;
+        } while ($cursor !== 0);
+
+        return $failedJobs;
     }
 
     /**
@@ -209,6 +227,9 @@ class Queue extends AbstractQueue
      */
     public function clearFailed(int $id) : void
     {
+        $redis = $this->redis();
+
+        $redis->hdel($this->redisKey() . ":failed", (string)$id);
     }
 
     /**
@@ -241,6 +262,11 @@ class Queue extends AbstractQueue
      */
     public function retryReserved() : void
     {
+        $redis = $this->redis();
+        $ids   = $redis->zrange($this->redisKey() . ":reserved", 0, -1);
+        foreach ($ids as $id) {
+            $this->release((int)$id);
+        }
     }
 
     /**
