@@ -160,10 +160,10 @@ class NsqConsumer extends AbstractConsumer
                 $throwable->getFile(),
                 $throwable->getLine()
             ), [
-                'driver'     => get_class($this->queue),
-                'channel'    => $this->queue->getChannel(),
-                'message_id' => $id,
-                'attempts'   => $attempts,
+                'driver'   => get_class($this->queue),
+                'channel'  => $this->queue->getChannel(),
+                'id'       => $id,
+                'attempts' => $attempts,
             ]);
         }
     }

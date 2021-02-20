@@ -94,8 +94,6 @@ class Queue extends AbstractQueue
 
                 if ($defer > 0) {
                     $redis->zadd($this->redisKey() . ":delayed", $id, time() + $defer);
-                } else {
-                    $redis->lpush($this->redisKey() . ":waiting", $id);
                 }
                 $redis->exec();
             } catch (Throwable $throwable) {
