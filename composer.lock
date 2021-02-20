@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "870adbeba1343b29f3b64a823ee9ff0c",
+    "content-hash": "5407f8b8c5726c2baf10995ba94725fc",
     "packages": [
         {
             "name": "bandwidth-throttle/token-bucket",

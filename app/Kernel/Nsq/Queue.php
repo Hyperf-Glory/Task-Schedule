@@ -240,6 +240,16 @@ class Queue extends AbstractQueue
      */
     public function reloadFailed(int $id, int $delay = 0) : void
     {
+        $redis = $this->redis();
+        $redis->eval(
+            LuaScript::reloadFail(),
+            [
+                $this->redisKey() . ":delayed",
+                $this->redisKey() . ":failed",
+                $id,
+                time() + $delay
+            ], 2
+        );
     }
 
     /**
@@ -247,6 +257,53 @@ class Queue extends AbstractQueue
      */
     public function clear() : void
     {
+        $redis = $this->redis();
+
+        // delete reserved queue
+        while ($redis->zcard($this->redisKey() . ":reserved") > 0) {
+            $redis->zremrangebyrank($this->redisKey() . ":reserved", 0, 499);
+        }
+
+        // delete delayed queue
+        while ($redis->zcard($this->redisKey() . ":delayed") > 0) {
+            $redis->zremrangebyrank($this->redisKey() . ":delayed", 0, 499);
+        }
+
+        // delete failed queue
+        $cursor = 0;
+        do {
+            [$cursor, $data] = $redis->hscan($this->redisKey() . ":failed", $cursor, ['COUNT' => 200]);
+            if (!empty($fields = array_keys($data))) {
+                $redis->hdel($this->redisKey() . ":failed", implode(',', $fields));
+            }
+        } while ($cursor !== 0);
+
+        // delete attempts queue
+        $cursor = 0;
+        do {
+            [$cursor, $data] = $redis->hscan($this->redisKey() . ":attempts", $cursor, ['COUNT' => 200]);
+            if (!empty($fields = array_keys($data))) {
+                $redis->hdel($this->redisKey() . ":attempts", implode(',', $fields));
+            }
+        } while ($cursor !== 0);
+
+        // delete messages queue
+        $cursor = 0;
+        do {
+            [$cursor, $data] = $redis->hscan($this->redisKey() . ":messages", $cursor, ['COUNT' => 200]);
+            if (!empty($fields = array_keys($data))) {
+                $redis->hdel($this->redisKey() . ":messages", implode(',', $fields));
+            }
+        } while ($cursor !== 0);
+
+        $iterator = null;
+        while (true) {
+            $keys = $redis->scan($iterator, $this->redisKey() . ':*', 50);
+            if ($keys === false) {
+                return;
+            }
+            $redis->del($keys);
+        }
     }
 
     /**
@@ -255,6 +312,19 @@ class Queue extends AbstractQueue
      */
     public function status() : array
     {
+        $redis = $this->redis();
+
+        $pipe = $redis->pipeline();
+        $pipe->get($this->redisKey() . ":message_id");
+        $pipe->zcard($this->redisKey() . ":reserved");
+        $pipe->llen($this->redisKey() . ":waiting");
+        $pipe->zcount($this->redisKey() . ":delayed", '-inf', '+inf');
+        $pipe->hlen($this->redisKey() . ":failed");
+        [$total, $reserved, $waiting, $delayed, $failed] = $pipe->exec();
+
+        $done = ($total ?? 0) - $waiting - $delayed - $reserved - $failed;
+
+        return [$waiting, $reserved, $delayed, $done, $failed, $total ?? 0];
     }
 
     /**

@@ -9,13 +9,15 @@ use App\Model\Task;
 use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
-use Hyperf\Utils\Arr;
+use Hyperf\View\RenderInterface;
+use Swoole\Coroutine;
 
 class IndexController extends AbstractController
 {
-    public function index() : string
+
+    public function index(RenderInterface $render)
     {
-        return __METHOD__;
+        return $render->render('index');
     }
 
     /**

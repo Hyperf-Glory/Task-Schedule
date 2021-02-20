@@ -40,7 +40,7 @@
         "hyperf/redis": "2.1.*",
         "hyperf/task": "2.1.*",
         "hyperf/tracer": "2.1.*",
-        "hyperf/view": "2.1.*",
+        "hyperf/view": "^2.1",
         "hyperf/view-engine": "2.1.*",
         "jeremeamia/superclosure": "^2.4"
     },
