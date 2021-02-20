@@ -155,4 +155,15 @@ interface QueueInterface
      * @throws \Throwable
      */
     public function migrateExpired() : void;
+
+    /**
+     * Get job message from queue.
+     *
+     * @param int $id
+     *
+     * @return array
+     *
+     * @throws \Throwable
+     */
+    public function get(int $id) : array;
 }

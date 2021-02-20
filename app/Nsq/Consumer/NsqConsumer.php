@@ -4,19 +4,22 @@ declare(strict_types = 1);
 
 namespace App\Nsq\Consumer;
 
-use App\Constants\Serializer;
 use App\Schedule\JobInterface;
+use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Nsq\AbstractConsumer;
 use Hyperf\Nsq\Annotation\Consumer;
 use Hyperf\Nsq\Message;
+use Hyperf\Nsq\Nsq;
 use Hyperf\Nsq\Result;
 use App\Component\Serializer\JsonSerializer;
 use App\Component\Serializer\ObjectSerializer;
+use Hyperf\Utils\Coroutine;
 use InvalidArgumentException;
 use Hyperf\Utils\Pipeline;
 use Psr\Container\ContainerInterface;
 use App\Kernel\Nsq\Queue;
 use ReflectionClass;
+use Throwable;
 
 /**
  * @Consumer()
@@ -33,20 +36,10 @@ class NsqConsumer extends AbstractConsumer
      */
     protected $channel = 'queue';
 
-    public function __construct(ContainerInterface $container)
-    {
-        parent::__construct($container);
-        $this->queue = make(Queue::class, [
-            'channel' => $this->channel
-        ]);
-        $this->setTopic($this->queue->getTopic());
-        $this->setChannel($this->queue->getChannel());
-        $this->setName($this->getShortCLassName());
-        $this->setNums(1);
-        $this->jsonSerializer   = $this->container->get(JsonSerializer::class);
-        $this->objectSerializer = $this->container->get(ObjectSerializer::class);
-        $this->pipeline         = $this->container->get(Pipeline::class);
-    }
+    /**
+     * @var StdoutLoggerInterface
+     */
+    protected $logger;
 
     /**
      * @var JsonSerializer
@@ -63,15 +56,52 @@ class NsqConsumer extends AbstractConsumer
      */
     protected $pipeline;
 
+    public function __construct(ContainerInterface $container)
+    {
+        parent::__construct($container);
+        $this->queue = make(Queue::class, [
+            'channel' => $this->channel
+        ]);
+        $this->setTopic($this->queue->getTopic());
+        $this->setChannel($this->queue->getChannel());
+        $this->setName($this->getShortCLassName());
+        $this->setNums(1);
+        $this->jsonSerializer   = $this->container->get(JsonSerializer::class);
+        $this->objectSerializer = $this->container->get(ObjectSerializer::class);
+        $this->pipeline         = $this->container->get(Pipeline::class);
+        $this->logger           = $this->container->get(StdoutLoggerInterface::class);
+    }
+
     public function consume(Message $message) : ?string
     {
+        ['id' => $id] = $this->jsonSerializer->denormalize($message->getBody());
 
-        ['id' => $id, 'serializerType' => $type, 'serializedMessage' => $body] = $this->jsonSerializer->denormalize($message->getBody());
-        if ((int)$id >= 0 && ($job = $this->objectSerializer->denormalize($body)) && in_array($type, [
-                Serializer::SERIALIZER_TYPE_CLOSURE,
-                Serializer::SERIALIZER_TYPE_PHP
-            ], true)) {
-            $this->handle((int)$id, $job);
+        if (!$id) {
+            $this->logger->error('Invalid task ID:' . $id);
+            return Result::DROP;
+        }
+        try {
+            $this->handle((int)$id);
+        } catch (Throwable $e) {
+            $this->logger->error(sprintf(
+                'Uncaptured exception[%s:%s] detected in %s::%d.',
+                get_class($e),
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            ), [
+                'driver'  => get_class($this->queue),
+                'channel' => $this->queue->getChannel(),
+                'id'      => $id,
+            ]);
+            try {
+                if ($this->queue->isReserved($id)) {
+                    $this->queue->release($id, 60);
+                }
+            } catch (Throwable $e) {
+                $this->logger->error($e->getMessage());
+            }
+            return Result::DROP;
         }
 
         return Result::ACK;
@@ -80,24 +110,61 @@ class NsqConsumer extends AbstractConsumer
     /**
      * The processing logic for the current task
      *
-     * @param int                   $id
-     * @param JobInterface|\Closure $handler
+     * @param int $id
+     *
+     * @throws \Throwable
      */
-    protected function handle(int $id, $handler) : void
+    protected function handle(int $id) : void
     {
         try {
-            if (empty($handler)) {
-                throw new InvalidArgumentException('Job is empty.');
+            /** @var $job \Closure|JobInterface */
+            [, $attempts, $job] = $this->queue->get($id);
+            $job = $this->objectSerializer->denormalize($job);
+            if (empty($job)) {
+                throw new InvalidArgumentException('Job popped is empty.');
             }
-            is_callable($handler) ? $handler() : $this->pipeline->send($handler)
-                                                                ->through($handler->middleware())
-                                                                ->then(function (JobInterface $job)
-                                                                {
-                                                                    $job->handle();
-                                                                });
+            $this->queue->attemptsIncr($id);
+            is_callable($job) ? $job() : $this->pipeline->send($job)
+                                                        ->through($job->middleware())
+                                                        ->then(function (JobInterface $job)
+                                                        {
+                                                            $job->handle();
+                                                        });
             $this->queue->remove($id);
-        } catch (\Throwable $throwable) {
-
+        } catch (Throwable $throwable) {
+            $attempts = (int)($attempts ?? 0);
+            $payload  = [
+                'last_error'         => get_class($throwable),
+                'last_error_message' => $throwable->getMessage(),
+                'attempts'           => $attempts,
+            ];
+            if (!isset($job) || !$job instanceof JobInterface) {
+                $this->queue->failed($id, json_encode($payload, JSON_THROW_ON_ERROR));
+            } elseif ($job->canRetry($attempts, $throwable)) {
+                $delay = max($job->retryAfter($attempts), 0);
+                $this->queue->release($id, $delay);
+                Coroutine::create(function () use ($id, $delay)
+                {
+                    $this->container->get(Nsq::class)->publish($this->topic, $this->jsonSerializer->normalize([
+                        'id' => $id,
+                    ]), $delay + random_int(0, 10));
+                });
+            } else {
+                $this->queue->failed($id, json_encode($payload, JSON_THROW_ON_ERROR));
+                $job->failed($id, $payload);
+            }
+            $this->logger->error(sprintf(
+                'Error when job executed: [%s]:[%s] detected in %s::%d.',
+                get_class($throwable),
+                $throwable->getMessage(),
+                $throwable->getFile(),
+                $throwable->getLine()
+            ), [
+                'driver'     => get_class($this->queue),
+                'channel'    => $this->queue->getChannel(),
+                'message_id' => $id,
+                'attempts'   => $attempts,
+            ]);
         }
     }
 

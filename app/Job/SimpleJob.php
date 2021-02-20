@@ -26,7 +26,7 @@ class SimpleJob implements JobInterface
 
     public function canRetry(int $attempt, $error) : bool
     {
-        return false;
+        return $attempt < 5;
     }
 
     public function retryAfter(int $attempt) : int
@@ -36,11 +36,11 @@ class SimpleJob implements JobInterface
 
     public function failed(int $id, array $payload) : void
     {
-
+        echo "job#{$id} was failed.\n";
     }
 
     public function middleware() : array
     {
-        return [];
+        return [JobMiddleware::class];
     }
 }
