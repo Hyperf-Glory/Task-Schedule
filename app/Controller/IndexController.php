@@ -10,14 +10,41 @@ use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
 use Hyperf\View\RenderInterface;
-use Swoole\Coroutine;
+use Psr\Http\Message\ResponseInterface;
 
 class IndexController extends AbstractController
 {
 
-    public function index(RenderInterface $render)
+    public function index(RenderInterface $render) : ResponseInterface
     {
         return $render->render('index');
+    }
+
+    public function queueStatus() : ?ResponseInterface
+    {
+        $queue = new Queue('queue');
+        try {
+            [$waiting, $reserved, $delayed, $done, $failed, $total] = $queue->status();
+            $status = compact('waiting', 'reserved', 'failed', 'delayed', 'done', 'total');
+            $pie    = [];
+            foreach ($status as $tag => $item) {
+                if ('total' !== $tag) {
+                    $pie[] = [
+                        'status' => $tag,
+                        'value'  => $item,
+                    ];
+                }
+            }
+
+            $line = array_merge(['time' => date('Y-m-d H:i:s')], $status);
+            return $this->response->success('获取成功!', [
+                'pie'  => $pie,
+                'line' => $line
+            ]);
+        } catch (\Throwable $e) {
+            $this->logger->error($e->getMessage());
+        }
+        return null;
     }
 
     /**

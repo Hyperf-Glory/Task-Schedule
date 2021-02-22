@@ -36,4 +36,10 @@ abstract class AbstractController
      */
     protected $response;
 
+    /**
+     * @Inject()
+     * @var \Hyperf\Contract\StdoutLoggerInterface
+     */
+    protected $logger;
+
 }
