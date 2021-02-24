@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Job\SimpleJob;
 use App\Kernel\Nsq\Queue;
+use App\Kernel\Redis\Lua\Incr;
 use App\Model\Task;
 use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
@@ -189,5 +190,11 @@ class IndexController extends AbstractController
 
         $queue = new Queue('queue');
         $queue->push($job, 0);
+    }
+
+    public function lua()
+    {
+        $script = new Incr($this->container);
+        return $script->eval(['short#link', 24 * 60 * 60]);
     }
 }
