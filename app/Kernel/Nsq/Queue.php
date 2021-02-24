@@ -384,7 +384,7 @@ class Queue extends AbstractQueue
                 ]);
             } catch (Throwable $throwable) {
                 $this->logger->error($throwable->getMessage());
-                $chan->close();
+                $chan->push(false);
             }
         });
 
