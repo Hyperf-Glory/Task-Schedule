@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace App\Controller;
 
+use App\Component\Hashids\Hashids;
 use App\Job\SimpleJob;
 use App\Kernel\Nsq\Queue;
 use App\Kernel\Redis\Lua\Incr;
@@ -11,6 +12,7 @@ use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
 use Hyperf\View\RenderInterface;
+use phpseclib\Crypt\Hash;
 use Psr\Http\Message\ResponseInterface;
 
 class IndexController extends AbstractController
@@ -195,6 +197,11 @@ class IndexController extends AbstractController
     public function lua()
     {
         $script = new Incr($this->container);
-        return $script->eval(['short#link', 24 * 60 * 60]);
+        $id     = $script->eval(['short#link', 24 * 60 * 60]);
+        if (!$this->container->has(Hashids::class)) {
+            $this->container->set(Hashids::class, new Hashids());
+        }
+        $hashids = $this->container->get(Hashids::class);
+        return $hashids->encode($id);
     }
 }
