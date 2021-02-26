@@ -81,6 +81,8 @@ class ConcurrentMySQLPattern
     }
 
     /**
+     * //TODO 待确认该方案
+     * @deprecated
      * @var JobInterface|\Closure $handler
      */
     public function handle($handler) : void
@@ -94,6 +96,14 @@ class ConcurrentMySQLPattern
         });
     }
 
+    /**
+     * //TODO 待确认该方案
+     *
+     * @param $handler
+     *
+     * @throws \Throwable
+     * @deprecated
+     */
     private function execute($handler) : void
     {
         try {
