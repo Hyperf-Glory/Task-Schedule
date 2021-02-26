@@ -3,12 +3,13 @@ declare(strict_types = 1);
 
 namespace App\Kernel\Concurrent;
 
+use App\Dag\Interfaces\DagInterface;
+use App\Kernel\Concurrent\Exception\MySQLRuntimeException;
 use Hyperf\Engine\Channel;
 use Hyperf\Utils\Coordinator\Constants;
 use Hyperf\Utils\Coordinator\CoordinatorManager;
 use Hyperf\Utils\Coroutine;
 use Psr\Log\LoggerInterface;
-use App\Schedule\JobInterface;
 use Throwable;
 
 class ConcurrentMySQLPattern
@@ -81,37 +82,44 @@ class ConcurrentMySQLPattern
     }
 
     /**
-     * //TODO 待确认该方案
+     *
+     *
+     * @param DagInterface $dag
+     *
      * @deprecated
-     * @var JobInterface|\Closure $handler
+     *
      */
-    public function handle($handler) : void
+    public function handle(DagInterface $dag) : void
     {
         if (!$this->chan) {
             $this->loop();
         }
-        $this->chan->push(function () use ($handler)
+        $this->chan->push(function () use ($dag)
         {
-            $this->execute($handler);
+            $dag->Run();
         });
     }
 
-    /**
-     * //TODO 待确认该方案
-     *
-     * @param $handler
-     *
-     * @throws \Throwable
-     * @deprecated
-     */
-    private function execute($handler) : void
+    public function commit() : void
     {
-        try {
-            is_callable($handler) ? $handler() : $handler->handle();
-        } catch (Throwable $throwable) {
-            $this->logger->error(sprintf('PDO execute failed#'));
-            throw $throwable;
+        if (!$this->chan) {
+            $this->loop();
         }
+        if ($this->PDO->inTransaction()) {
+            $this->PDO->commit();
+        }
+        throw new MySQLRuntimeException(sprintf('PDO does not open a transaction#.'));
+    }
+
+    public function rollback() : void
+    {
+        if (!$this->chan) {
+            $this->loop();
+        }
+        if ($this->PDO->inTransaction()) {
+            $this->PDO->rollBack();
+        }
+        throw new MySQLRuntimeException(sprintf('PDO does not open a transaction#.'));
     }
 
     /**
@@ -132,6 +140,14 @@ class ConcurrentMySQLPattern
         {
             $this->PDO = null;
         });
+    }
+
+    /**
+     * @return null|\PDO
+     */
+    public function getPDO() : ?\PDO
+    {
+        return $this->PDO;
     }
 
 }
