@@ -8,13 +8,15 @@ use Hyperf\Utils\Coordinator\Constants;
 use Hyperf\Utils\Coordinator\CoordinatorManager;
 use Hyperf\Utils\Coroutine;
 use Psr\Log\LoggerInterface;
+use App\Schedule\JobInterface;
+use Throwable;
 
 class ConcurrentMySQLPattern
 {
     /**
      * @var ?\PDO
      */
-    protected $pdo;
+    protected $PDO;
 
     /**
      * @var ?Channel
@@ -28,13 +30,26 @@ class ConcurrentMySQLPattern
 
     public function __construct(\PDO $PDO, LoggerInterface $logger = null)
     {
-        $this->pdo    = $PDO;
+        $this->PDO    = $PDO;
         $this->logger = $logger;
-        $this->chan   = new Channel(1);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTransaction() : bool
+    {
+        return $this->PDO->inTransaction();
+    }
+
+    public function isOpen() : bool
+    {
+        return $this->PDO !== null;
     }
 
     public function loop() : void
     {
+        $this->chan = new Channel(1);
         Coroutine::create(function ()
         {
             while (true) {
@@ -44,9 +59,9 @@ class ConcurrentMySQLPattern
                         break;
                     }
                     $closure->call($this);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $this->logger->error('Pdo error:' . $e->getMessage());
-                    $this->pdo = null;
+                    $this->PDO = null;
                     break;
                 }
             }
@@ -63,6 +78,50 @@ class ConcurrentMySQLPattern
                 }
             });
         }
+    }
+
+    /**
+     * @var JobInterface|\Closure $handler
+     */
+    public function handle($handler) : void
+    {
+        if (!$this->chan) {
+            $this->loop();
+        }
+        $this->chan->push(function () use ($handler)
+        {
+            $this->execute($handler);
+        });
+    }
+
+    private function execute($handler) : void
+    {
+        try {
+            is_callable($handler) ? $handler() : $handler->handle();
+        } catch (Throwable $throwable) {
+            $this->logger->error(sprintf('PDO execute failed#'));
+            throw $throwable;
+        }
+    }
+
+    /**
+     * Close the mysql.
+     */
+    public function close() : void
+    {
+        if (!Coroutine::inCoroutine()) {
+            $this->PDO = null;
+            return;
+        }
+
+        if (!$this->chan) {
+            $this->loop();
+        }
+
+        $this->chan->push(function ()
+        {
+            $this->PDO = null;
+        });
     }
 
 }

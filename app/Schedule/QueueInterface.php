@@ -29,7 +29,6 @@ interface QueueInterface
      * @param \Closure|JobInterface $message
      * @param float                 $defer
      *
-     * @throws \Throwable
      */
     public function push($message, float $defer = 0.0) : void;
 

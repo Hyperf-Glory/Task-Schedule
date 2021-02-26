@@ -12,7 +12,6 @@ use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
 use Hyperf\View\RenderInterface;
-use phpseclib\Crypt\Hash;
 use Psr\Http\Message\ResponseInterface;
 
 class IndexController extends AbstractController
@@ -184,14 +183,14 @@ class IndexController extends AbstractController
         return $tree;
     }
 
-    public function queue()
+    public function queue() : void
     {
         $task = Task::find(1);
 
         $job = new SimpleJob($task);
 
         $queue = new Queue('queue');
-        $queue->push($job, 0);
+        $queue->push($job);
     }
 
     public function lua()
