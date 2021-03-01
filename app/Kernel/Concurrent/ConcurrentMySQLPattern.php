@@ -96,7 +96,7 @@ class ConcurrentMySQLPattern
         }
         $this->chan->push(function () use ($dag)
         {
-            $dag->Run();
+            $dag->Run($this);
         });
     }
 
