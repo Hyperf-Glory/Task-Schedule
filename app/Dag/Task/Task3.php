@@ -6,7 +6,7 @@ namespace App\Dag\Task;
 use App\Dag\Interfaces\DagInterface;
 use App\Kernel\Concurrent\ConcurrentMySQLPattern;
 
-class Task2 implements DagInterface
+class Task3 implements DagInterface
 {
     /**
      * @var bool
@@ -18,12 +18,7 @@ class Task2 implements DagInterface
      */
     public function Run(ConcurrentMySQLPattern $pattern) : void
     {
-        $sqlquery = "DELETE FROM `edge` WHERE `edge_id` = 1";
-        if ($pattern->getPDO()->exec($sqlquery)) {
-            echo "A new record has been deleted.";
-        }
-        dump($pattern->getPDO()->errorInfo());
-        $this->next = true;
+        var_dump($pattern->getPDO()->commit());
     }
 
     public function isNext() : bool

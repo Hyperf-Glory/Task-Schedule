@@ -10,22 +10,18 @@ use PDO;
 class Task1 implements DagInterface
 {
 
-    protected $task;
-
-    public function __construct(string $task)
-    {
-        $this->task = $task;
-    }
-
     /**
      * @inheritDoc
      */
     public function Run(ConcurrentMySQLPattern $pattern) : array
     {
-        $sqlquery = "INSERT INTO edge (strat_vertex,end_vertex )VALUES (2,2)";
+        $start    = random_int(1, 999);
+        $end      = random_int(999, 99999);
+        $sqlquery = "INSERT INTO `edge` (`start_vertex`,`end_vertex`) VALUES ({$start},{$end})";
         if ($pattern->getPDO()->exec($sqlquery)) {
             echo "A new record has been inserted";
         }
+        dump($pattern->getPDO()->errorInfo());
         return [
             1,
             2,

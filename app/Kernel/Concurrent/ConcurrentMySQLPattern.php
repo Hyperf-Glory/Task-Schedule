@@ -100,24 +100,32 @@ class ConcurrentMySQLPattern
         });
     }
 
-    public function commit() : void
+    public function beginTransaction() : bool
+    {
+        if (!$this->chan) {
+            $this->loop();
+        }
+        return $this->PDO->beginTransaction();
+    }
+
+    public function commit() : bool
     {
         if (!$this->chan) {
             $this->loop();
         }
         if ($this->PDO->inTransaction()) {
-            $this->PDO->commit();
+            return $this->PDO->commit();
         }
         throw new MySQLRuntimeException(sprintf('PDO does not open a transaction#.'));
     }
 
-    public function rollback() : void
+    public function rollback() : bool
     {
         if (!$this->chan) {
             $this->loop();
         }
         if ($this->PDO->inTransaction()) {
-            $this->PDO->rollBack();
+            return $this->PDO->rollBack();
         }
         throw new MySQLRuntimeException(sprintf('PDO does not open a transaction#.'));
     }
