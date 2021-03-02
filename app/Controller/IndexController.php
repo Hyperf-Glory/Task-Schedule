@@ -11,6 +11,8 @@ use App\Model\Task;
 use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
+use Hyperf\Utils\Arr;
+use Hyperf\Utils\Str;
 use Hyperf\View\RenderInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -202,5 +204,11 @@ class IndexController extends AbstractController
         }
         $hashids = $this->container->get(Hashids::class);
         return $hashids->encode($id);
+    }
+
+    public function io() : string
+    {
+        dump($this->request->input('io'));
+        return (string)$this->request->input('io');
     }
 }
