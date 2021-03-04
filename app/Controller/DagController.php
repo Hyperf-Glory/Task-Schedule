@@ -22,6 +22,7 @@ class DagController extends AbstractController
             $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
             $c = new ConcurrentMySQLPattern($pdo, $this->logger);
             $c->beginTransaction();
+            //TODO DAG
             \Hyperf\Utils\Coroutine::create(static function () use ($c)
             {
                 $task = new Task1();
