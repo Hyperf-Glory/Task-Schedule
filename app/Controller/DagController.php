@@ -7,38 +7,51 @@ use App\Dag\Task\Task1;
 use App\Dag\Task\Task2;
 use App\Dag\Task\Task3;
 use App\Kernel\Concurrent\ConcurrentMySQLPattern;
-use App\Kernel\Context\Coroutine;
 
 class DagController extends AbstractController
 {
     public function conCurrentMySQL() : void
     {
-        $dsn      = 'mysql:dbname=dag;host=101.200.75.54';
+        $dsn      = 'mysql:dbname=dag;host=120.79.187.246';
         $user     = 'root';
         $password = 'h9LcBXtX8Yxib4ov';
-        //TODO 待重新设计 事务的回滚和提交
         try {
             $pdo = new \PDO($dsn, $user, $password);
             $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
             $c = new ConcurrentMySQLPattern($pdo, $this->logger);
             $c->beginTransaction();
-            //TODO DAG MySQL
-            \Hyperf\Utils\Coroutine::create(static function () use ($c)
+            $dag     = new \Hyperf\Dag\Dag();
+            $a       = \Hyperf\Dag\Vertex::make(function () use ($c)
             {
                 $task = new Task1();
-                $task->Run($c);
-            });
-            \Hyperf\Utils\Coroutine::create(static function () use ($c)
+                return $task->Run($c);
+            }, 'a');
+            $b       = \Hyperf\Dag\Vertex::make(function ($results) use ($c)
             {
                 $task = new Task2();
-                $task->Run($c);
-            });
-
-            \Hyperf\Utils\Coroutine::create(static function () use ($c)
+                return $task->Run($c);
+            }, 'b');
+            $d       = \Hyperf\Dag\Vertex::make(function ($results) use ($c, $a, $b)
             {
-                $task = new Task3();
-                $task->Run($c);
-            });
+                if ($results[$a->key] && $results[$b->key]) {
+                    return $c->commit();
+                }
+                return $c->rollback();
+            }, 'd');
+            $e       = \Hyperf\Dag\Vertex::make(function ($results) use ($c)
+            {
+                $c->close();
+            }, 'e');
+            $results = $dag
+                ->addVertex($a)
+                ->addVertex($b)
+                ->addVertex($d)
+                ->addVertex($e)
+                ->addEdge($a, $b)
+                ->addEdge($b, $d)
+                ->addEdge($d, $e)
+                ->run();
+            dump($results);
         } catch (\PDOException $exception) {
             echo 'Connection failed: ' . $exception->getMessage();
         }

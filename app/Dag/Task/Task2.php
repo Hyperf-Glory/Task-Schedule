@@ -16,14 +16,10 @@ class Task2 implements DagInterface
     /**
      * @inheritDoc
      */
-    public function Run(ConcurrentMySQLPattern $pattern) : void
+    public function Run(ConcurrentMySQLPattern $pattern)
     {
-        $sqlquery = "DELETE FROM `edge` WHERE `edge_id` = 1";
-        if ($pattern->getPDO()->exec($sqlquery)) {
-            echo "A new record has been deleted.";
-        }
-        dump($pattern->getPDO()->errorInfo());
-        $this->next = true;
+        $sqlquery = "DELETE FROM `edge` WHERE `edge_id` = 23";
+        return $pattern->getPDO()->exec($sqlquery);
     }
 
     public function isNext() : bool

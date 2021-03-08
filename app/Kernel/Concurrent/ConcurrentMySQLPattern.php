@@ -82,24 +82,10 @@ class ConcurrentMySQLPattern
     }
 
     /**
+     * Open the transaction
      *
-     *
-     * @param DagInterface $dag
-     *
-     * @deprecated
-     *
+     * @return bool
      */
-    public function handle(DagInterface $dag) : void
-    {
-        if (!$this->chan) {
-            $this->loop();
-        }
-        $this->chan->push(function () use ($dag)
-        {
-            $dag->Run($this);
-        });
-    }
-
     public function beginTransaction() : bool
     {
         if (!$this->chan) {
@@ -108,6 +94,10 @@ class ConcurrentMySQLPattern
         return $this->PDO->beginTransaction();
     }
 
+    /**
+     * Transaction commit
+     * @return bool
+     */
     public function commit() : bool
     {
         if (!$this->chan) {
@@ -119,6 +109,10 @@ class ConcurrentMySQLPattern
         throw new MySQLRuntimeException(sprintf('PDO does not open a transaction#.'));
     }
 
+    /**
+     * Transaction rollback
+     * @return bool
+     */
     public function rollback() : bool
     {
         if (!$this->chan) {

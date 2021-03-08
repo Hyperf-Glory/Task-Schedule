@@ -1510,16 +1510,16 @@
         },
         {
             "name": "hyperf/database",
-            "version": "v2.1.8",
+            "version": "v2.1.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hyperf/database.git",
-                "reference": "5b9f83dc09b7da8410633f2451355d34525068cf"
+                "reference": "01bb9e2354d6fd66a0a99be65942aca1cfcc2de5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hyperf/database/zipball/5b9f83dc09b7da8410633f2451355d34525068cf",
-                "reference": "5b9f83dc09b7da8410633f2451355d34525068cf",
+                "url": "https://api.github.com/repos/hyperf/database/zipball/01bb9e2354d6fd66a0a99be65942aca1cfcc2de5",
+                "reference": "01bb9e2354d6fd66a0a99be65942aca1cfcc2de5",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -1573,7 +1573,7 @@
                 "pull-request": "https://github.com/hyperf/hyperf/pulls",
                 "source": "https://github.com/hyperf/hyperf"
             },
-            "time": "2021-02-25T02:56:23+00:00"
+            "time": "2021-03-03T12:07:29+00:00"
         },
         {
             "name": "hyperf/db-connection",
@@ -1783,16 +1783,16 @@
         },
         {
             "name": "hyperf/engine",
-            "version": "v1.0.3",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hyperf/engine.git",
-                "reference": "86f4fed5ff18fc08de8bf1dae21e1f7001781a65"
+                "reference": "edc0a42808911ef2d0c137f8b8b08a6233bae91d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hyperf/engine/zipball/86f4fed5ff18fc08de8bf1dae21e1f7001781a65",
-                "reference": "86f4fed5ff18fc08de8bf1dae21e1f7001781a65",
+                "url": "https://api.github.com/repos/hyperf/engine/zipball/edc0a42808911ef2d0c137f8b8b08a6233bae91d",
+                "reference": "edc0a42808911ef2d0c137f8b8b08a6233bae91d",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -1834,9 +1834,9 @@
             ],
             "support": {
                 "issues": "https://github.com/hyperf/engine/issues",
-                "source": "https://github.com/hyperf/engine/tree/v1.0.3"
+                "source": "https://github.com/hyperf/engine/tree/v1.1.0"
             },
-            "time": "2021-02-28T12:14:20+00:00"
+            "time": "2021-03-03T11:21:31+00:00"
         },
         {
             "name": "hyperf/event",
@@ -3176,16 +3176,16 @@
         },
         {
             "name": "hyperf/utils",
-            "version": "v2.1.7",
+            "version": "v2.1.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hyperf/utils.git",
-                "reference": "8d83d0107528ccd1b3a7457ed898cafb1032c078"
+                "reference": "53bdd70f989741f6d4530a630fb402ea90ce54d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hyperf/utils/zipball/8d83d0107528ccd1b3a7457ed898cafb1032c078",
-                "reference": "8d83d0107528ccd1b3a7457ed898cafb1032c078",
+                "url": "https://api.github.com/repos/hyperf/utils/zipball/53bdd70f989741f6d4530a630fb402ea90ce54d9",
+                "reference": "53bdd70f989741f6d4530a630fb402ea90ce54d9",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -3197,7 +3197,7 @@
             "require": {
                 "doctrine/inflector": "^2.0",
                 "hyperf/contract": "~2.1.0",
-                "hyperf/engine": "^1.0",
+                "hyperf/engine": "^1.1",
                 "php": ">=7.2"
             },
             "require-dev": {
@@ -3251,7 +3251,7 @@
                 "pull-request": "https://github.com/hyperf/hyperf/pulls",
                 "source": "https://github.com/hyperf/hyperf"
             },
-            "time": "2021-02-16T03:27:03+00:00"
+            "time": "2021-03-03T12:07:29+00:00"
         },
         {
             "name": "hyperf/view",
@@ -7632,16 +7632,16 @@
         },
         {
             "name": "hyperf/testing",
-            "version": "v2.1.0",
+            "version": "v2.1.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hyperf/testing.git",
-                "reference": "1eb8d0854dea9d4aa3112b3a187203a0fee26ec5"
+                "reference": "dadffe6e4429eada7e4b5370c9cb97e1a4e29b9a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hyperf/testing/zipball/1eb8d0854dea9d4aa3112b3a187203a0fee26ec5",
-                "reference": "1eb8d0854dea9d4aa3112b3a187203a0fee26ec5",
+                "url": "https://api.github.com/repos/hyperf/testing/zipball/dadffe6e4429eada7e4b5370c9cb97e1a4e29b9a",
+                "reference": "dadffe6e4429eada7e4b5370c9cb97e1a4e29b9a",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -7689,9 +7689,9 @@
                 "testing"
             ],
             "support": {
-                "source": "https://github.com/hyperf/testing/tree/v2.1.0"
+                "source": "https://github.com/hyperf/testing/tree/v2.1.9"
             },
-            "time": "2020-12-27T06:12:45+00:00"
+            "time": "2021-03-06T02:21:36+00:00"
         },
         {
             "name": "mockery/mockery",
