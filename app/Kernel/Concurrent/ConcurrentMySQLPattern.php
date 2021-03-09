@@ -3,12 +3,12 @@ declare(strict_types = 1);
 
 namespace App\Kernel\Concurrent;
 
-use App\Dag\Interfaces\DagInterface;
 use App\Kernel\Concurrent\Exception\MySQLRuntimeException;
 use Hyperf\Engine\Channel;
 use Hyperf\Utils\Coordinator\Constants;
 use Hyperf\Utils\Coordinator\CoordinatorManager;
 use Hyperf\Utils\Coroutine;
+use PDO;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -29,7 +29,7 @@ class ConcurrentMySQLPattern
      */
     protected $logger;
 
-    public function __construct(\PDO $PDO, LoggerInterface $logger = null)
+    public function __construct(PDO $PDO, LoggerInterface $logger)
     {
         $this->PDO    = $PDO;
         $this->logger = $logger;
@@ -145,9 +145,9 @@ class ConcurrentMySQLPattern
     }
 
     /**
-     * @return null|\PDO
+     * @return \PDO
      */
-    public function getPDO() : ?\PDO
+    public function getPDO() : PDO
     {
         return $this->PDO;
     }

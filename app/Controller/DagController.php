@@ -5,7 +5,6 @@ namespace App\Controller;
 
 use App\Dag\Task\Task1;
 use App\Dag\Task\Task2;
-use App\Dag\Task\Task3;
 use App\Kernel\Concurrent\ConcurrentMySQLPattern;
 
 class DagController extends AbstractController
