@@ -11,8 +11,6 @@ use App\Model\Task;
 use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
-use Hyperf\Utils\Arr;
-use Hyperf\Utils\Str;
 use Hyperf\View\RenderInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -132,57 +130,6 @@ class IndexController extends AbstractController
             $dag->run();
         } catch (\Throwable $e) {
         }
-    }
-
-    public function test() : void
-    {
-        $dag   = new Dag();
-        $start = Vertex::make(function ()
-        {
-            sleep(1);
-            echo "start\n";
-        });
-        $dag->addVertex($start);
-        $task = Task::getQuery()->select('*')->where('workflow_id', '=', 1)->get();
-
-        foreach ($task as $key => $value) {
-            $this->vertex[$value->name] = Vertex::make(static function () use ($value)
-            {
-                sleep(1);
-                echo $value->name . "\n";
-            });
-            $dag->addVertex($this->vertex[$value->name]);
-        }
-
-        $source = VertexEdge::query()->leftJoin('task', 'vertex_edge.task_id', '=', 'task.id')->select([
-            'task.name',
-            'vertex_edge.task_id',
-            'vertex_edge.pid'
-        ])->get()->toArray();
-        $this->tree($dag, $source, 0);
-        try {
-            $dag->run();
-        } catch (\Throwable $e) {
-        }
-    }
-
-    private function tree(Dag $dag, array $source, int $pid = 0) : array
-    {
-        $tree = [];
-        foreach ($source as $v) {
-            if ($v['pid'] === $pid) {
-                $v['children'] = $this->tree($dag, $source, $v['task_id']);
-                if (empty($v['children'])) {
-                    unset($v['children']);
-                } else {
-                    foreach ($v['children'] as $child) {
-                        $dag->addEdge($this->vertex[$v['name']], $this->vertex[$child['name']]);
-                    }
-                }
-                $tree[] = $v;
-            }
-        }
-        return $tree;
     }
 
     public function queue() : void

@@ -6,9 +6,19 @@ namespace App\Controller;
 use App\Dag\Task\Task1;
 use App\Dag\Task\Task2;
 use App\Kernel\Concurrent\ConcurrentMySQLPattern;
+use App\Model\Task;
+use App\Model\VertexEdge;
+use Hyperf\Dag\Dag;
+use Hyperf\Dag\Vertex;
 
 class DagController extends AbstractController
 {
+
+    /**
+     * @var array<Vertex>
+     */
+    public $vertex;
+
     public function conCurrentMySQL() : void
     {
         $dsn      = 'mysql:dbname=dag;host=120.79.187.246';
@@ -50,9 +60,60 @@ class DagController extends AbstractController
                 ->addEdge($b, $d)
                 ->addEdge($d, $e)
                 ->run();
-            dump($results);
         } catch (\PDOException $exception) {
             echo 'Connection failed: ' . $exception->getMessage();
         }
+    }
+
+    public function index() : void
+    {
+        $dag   = new Dag();
+        $start = Vertex::make(function ()
+        {
+            sleep(1);
+            echo "start\n";
+        });
+        $dag->addVertex($start);
+        //TODO 查询 VertexEdge 任务流
+        $task = Task::getQuery()->select('*')->where('workflow_id', '=', 1)->get();
+
+        foreach ($task as $key => $value) {
+            $this->vertex[$value->name] = Vertex::make(static function () use ($value)
+            {
+                sleep(1);
+                echo $value->name . "\n";
+            });
+            $dag->addVertex($this->vertex[$value->name]);
+        }
+
+        $source = VertexEdge::query()->leftJoin('task', 'vertex_edge.task_id', '=', 'task.id')->select([
+            'task.name',
+            'vertex_edge.task_id',
+            'vertex_edge.pid'
+        ])->get()->toArray();
+        $this->tree($dag, $source, 0);
+        try {
+            $dag->run();
+        } catch (\Throwable $e) {
+        }
+    }
+
+    private function tree(Dag $dag, array $source, int $pid = 0) : array
+    {
+        $tree = [];
+        foreach ($source as $v) {
+            if ($v['pid'] === $pid) {
+                $v['children'] = $this->tree($dag, $source, $v['task_id']);
+                if (empty($v['children'])) {
+                    unset($v['children']);
+                } else {
+                    foreach ($v['children'] as $child) {
+                        $dag->addEdge($this->vertex[$v['name']], $this->vertex[$child['name']]);
+                    }
+                }
+                $tree[] = $v;
+            }
+        }
+        return $tree;
     }
 }
