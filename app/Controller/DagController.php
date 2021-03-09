@@ -74,7 +74,7 @@ class DagController extends AbstractController
             echo "start\n";
         });
         $dag->addVertex($start);
-        //TODO 查询 VertexEdge 任务流
+        //TODO 查询 VertexEdge 任务流 VertexEdge::getQuery()->select('*')->where('workflow_id', '=', 1)->get();
         $task = Task::getQuery()->select('*')->where('workflow_id', '=', 1)->get();
 
         foreach ($task as $key => $value) {
