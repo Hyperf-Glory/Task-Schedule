@@ -52,6 +52,9 @@ class IndexController extends AbstractController
      */
     public $vertex;
 
+    /**
+     * @desc 测试job队列功能
+     */
     public function queue() : void
     {
         $task = Task::find(1);
@@ -62,6 +65,10 @@ class IndexController extends AbstractController
         $queue->push($job);
     }
 
+    /**
+     * 测试lua脚本
+     * @return mixed
+     */
     public function lua()
     {
         $script = new Incr($this->container);
