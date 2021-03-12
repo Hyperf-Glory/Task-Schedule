@@ -6,6 +6,7 @@ namespace App\Nsq\Consumer;
 
 use App\Schedule\JobInterface;
 use Carbon\Carbon;
+use Codedungeon\PHPCliColors\Color;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Nsq\AbstractConsumer;
 use Hyperf\Nsq\Annotation\Consumer;
@@ -140,12 +141,14 @@ class NsqConsumer extends AbstractConsumer
                 throw new InvalidArgumentException('Job popped is empty.');
             }
             $this->queue->attemptsIncr($id);
+            echo Color::GREEN, sprintf('Task ID:[%s] Time:[%s] start execution#', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
             is_callable($job) ? $job() : $this->pipeline->send($job)
                                                         ->through($job->middleware())
                                                         ->then(function (JobInterface $job)
                                                         {
                                                             $job->handle();
                                                         });
+            echo Color::YELLOW, sprintf('Task ID:[%s] Time:[%s] completed#', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
             $this->queue->remove($id);
         } catch (Throwable $throwable) {
             $attempts = (int)($attempts ?? 0);

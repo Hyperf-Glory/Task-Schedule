@@ -10,6 +10,7 @@ use App\Model\Task;
 use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
+use Hyperf\Utils\Arr;
 
 class DagController extends AbstractController
 {
@@ -21,9 +22,9 @@ class DagController extends AbstractController
 
     public function conCurrentMySQL() : void
     {
-        $dsn      = 'mysql:dbname=dag;host=120.79.187.246';
-        $user     = 'root';
-        $password = 'h9LcBXtX8Yxib4ov';
+        $dsn      = '';
+        $user     = '';
+        $password = '';
         try {
             $pdo = new \PDO($dsn, $user, $password);
             $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
@@ -70,13 +71,15 @@ class DagController extends AbstractController
         $dag   = new Dag();
         $start = Vertex::make(function ()
         {
-            sleep(1);
             echo "start\n";
         });
         $dag->addVertex($start);
-        //TODO 查询 VertexEdge 任务流 VertexEdge::getQuery()->select('*')->where('workflow_id', '=', 1)->get();
-        $task = Task::getQuery()->select('*')->where('workflow_id', '=', 1)->get();
+        $tasks = VertexEdge::getQuery()->where('workflow_id', '=', 1)->get('task_id')->pluck('task_id')->toArray();
 
+        $task = Task::getQuery()->select('*')->whereIn('id', $tasks)->get();
+        /**
+         * @var Task $value
+         */
         foreach ($task as $key => $value) {
             $this->vertex[$value->name] = Vertex::make(static function () use ($value)
             {
@@ -85,7 +88,11 @@ class DagController extends AbstractController
             });
             $dag->addVertex($this->vertex[$value->name]);
         }
-
+        $end = Vertex::make(function ()
+        {
+            echo "end\n";
+        });
+        $dag->addVertex($end);
         $source = VertexEdge::query()->leftJoin('task', 'vertex_edge.task_id', '=', 'task.id')->select([
             'task.name',
             'vertex_edge.task_id',
