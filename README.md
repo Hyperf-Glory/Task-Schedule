@@ -27,6 +27,7 @@
 ## TODO
 
 - 分布式支持
+- 仪表盘切换为pie-borderRadius和area-stack-gradient
 
 ## 案例
 
