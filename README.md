@@ -15,7 +15,7 @@
 - 弹性多进程消费
 - 工作进程协程支持
 - 漂亮的仪表盘
-- 任务编排协程安全的单连接模式
+- 任务编排协程安全的单连接模式(事务保持、多路复用等条件下，有时必须使用一个连接)
 - dag任务编排
 
 ## 环境
@@ -51,5 +51,62 @@ class Example{
     }
 }
 ```
-2.仪表盘
+
+2.任务编排协程安全的单连接模式(事务保持、多路复用等条件下，有时必须使用一个连接)
+
+```php
+use App\Kernel\Concurrent\ConcurrentMySQLPattern;
+use App\Dag\Task\Task1;
+use App\Dag\Task\Task2;
+use App\Dag\Task\Task3;
+class Example{
+public function conCurrentMySQL() : void
+    {
+        $dsn      = '';
+        $user     = '';
+        $password = '';
+        try {
+            $pdo = new \PDO($dsn, $user, $password);
+            $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+            $c = new ConcurrentMySQLPattern($pdo, $this->logger);
+            $c->beginTransaction();
+            $dag     = new \Hyperf\Dag\Dag();
+            $a       = \Hyperf\Dag\Vertex::make(function () use ($c)
+            {
+                $task = new Task1();
+                return $task->Run($c);
+            }, 'a');
+            $b       = \Hyperf\Dag\Vertex::make(function ($results) use ($c)
+            {
+                $task = new Task2();
+                return $task->Run($c);
+            }, 'b');
+            $d       = \Hyperf\Dag\Vertex::make(function ($results) use ($c, $a, $b)
+            {
+                if ($results[$a->key] && $results[$b->key]) {
+                    return $c->commit();
+                }
+                return $c->rollback();
+            }, 'd');
+            $e       = \Hyperf\Dag\Vertex::make(function ($results) use ($c)
+            {
+                $c->close();
+            }, 'e');
+            $results = $dag
+                ->addVertex($a)
+                ->addVertex($b)
+                ->addVertex($d)
+                ->addVertex($e)
+                ->addEdge($a, $b)
+                ->addEdge($b, $d)
+                ->addEdge($d, $e)
+                ->run();
+        } catch (\PDOException $exception) {
+            echo 'Connection failed: ' . $exception->getMessage();
+        }
+    }
+}
+```
+
+3.仪表盘
 ![img.png](img.png)
