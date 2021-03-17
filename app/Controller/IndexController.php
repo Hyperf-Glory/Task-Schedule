@@ -53,7 +53,7 @@ class IndexController extends AbstractController
     public $vertex;
 
     /**
-     * @desc 测试job队列功能
+     * 测试job队列功能
      */
     public function queue() : void
     {
