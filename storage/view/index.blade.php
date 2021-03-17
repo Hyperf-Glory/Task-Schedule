@@ -31,7 +31,7 @@
 <div id="app">
     <div class="container">
         <div class="pie">
-            <ve-pie :data="pieChartData"></ve-pie>
+            <ve-pie :data="pieChartData" :settings="pieSettings"></ve-pie>
         </div>
         <div class="line">
             <ve-line :data="lineChartData"></ve-line>
@@ -52,6 +52,28 @@
           rows: [],
           columns: ["time", "waiting", "reserved", "failed", "delayed", "done"]
         },
+
+        pieSettings: {
+          itemStyle: {
+            borderRadius: 10,
+            borderColor: '#ffffff',
+            borderWidth: 2
+          },
+          label: {
+            show: false,
+            position: 'center'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: '40',
+              fontWeight: 'bold'
+            }
+          },
+          labelLine: {
+            show: false
+          },
+        },
         pieChartData: {
           rows: [{
             "status": "waiting",
@@ -69,7 +91,7 @@
             "status": "done",
             "value": 0
           }],
-          columns: ["status", "value"]
+          columns: ["status", "value"],
         }
       }
     },
