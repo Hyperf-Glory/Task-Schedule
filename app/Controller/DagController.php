@@ -10,8 +10,6 @@ use App\Model\Task;
 use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
-use Hyperf\Engine\Channel;
-use Hyperf\Utils\Arr;
 use Hyperf\Utils\Coroutine;
 use PDOException;
 use Throwable;
