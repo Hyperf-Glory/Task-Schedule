@@ -105,6 +105,7 @@ class Queue extends AbstractQueue
                 }
             } catch (Throwable $throwable) {
                 $this->logger->error(sprintf('Error in Redis operation or channel push [%s]', $throwable->getMessage()));
+                $queue->close();
             }
         });
 
