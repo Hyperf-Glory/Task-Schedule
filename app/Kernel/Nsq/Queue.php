@@ -103,6 +103,8 @@ class Queue extends AbstractQueue
                 if ($ret[0]) {
                     $queue->push($id);
                 }
+                //channel push failed.
+                throw new RuntimeException(sprintf('Redis Multi Exec Action [%s] Failed.', 'hset'));
             } catch (Throwable $throwable) {
                 $this->logger->error(sprintf('Error in Redis operation or channel push [%s]', $throwable->getMessage()));
                 $queue->close();
