@@ -10,7 +10,11 @@ use App\Model\Task;
 use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
+use Hyperf\Engine\Channel;
 use Hyperf\Utils\Arr;
+use Hyperf\Utils\Coroutine;
+use PDOException;
+use Throwable;
 
 class DagController extends AbstractController
 {
@@ -29,6 +33,10 @@ class DagController extends AbstractController
             $pdo = new \PDO($dsn, $user, $password);
             $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
             $c = new ConcurrentMySQLPattern($pdo, $this->logger);
+            Coroutine::defer(static function () use ($c)
+            {
+                $c->close();
+            });
             $c->beginTransaction();
             $dag     = new \Hyperf\Dag\Dag();
             $a       = \Hyperf\Dag\Vertex::make(function () use ($c)
@@ -61,8 +69,8 @@ class DagController extends AbstractController
                 ->addEdge($b, $d)
                 ->addEdge($d, $e)
                 ->run();
-        } catch (\PDOException $exception) {
-            echo 'Connection failed: ' . $exception->getMessage();
+        } catch (Throwable | PDOException $exception) {
+            $this->logger->error(format_throwable($exception));
         }
     }
 
@@ -101,7 +109,7 @@ class DagController extends AbstractController
         $this->tree($dag, $source, 0);
         try {
             $dag->run();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
     }
 
