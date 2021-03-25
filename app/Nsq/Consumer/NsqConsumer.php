@@ -87,6 +87,7 @@ class NsqConsumer extends AbstractConsumer
         $this->objectSerializer = $this->container->get(ObjectSerializer::class);
         $this->pipeline         = $this->container->get(Pipeline::class);
         $this->logger           = $this->container->get(StdoutLoggerInterface::class);
+        $this->logger->info(sprintf('TimerTickID#%s started.', $this->timerId));
     }
 
     public function consume(Message $message) : ?string
