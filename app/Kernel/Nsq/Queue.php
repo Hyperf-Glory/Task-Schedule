@@ -93,15 +93,16 @@ class Queue extends AbstractQueue
                 //Use Redis to store records and statistics
                 $redis = $this->redis();
                 $id    = $redis->incr($this->redisKey() . ":message_id");
-                $queue->push($id);
                 //Redis exec
                 $redis->multi();
                 $redis->hset($this->redisKey() . ":messages", (string)$id, $pushMessage);
-
                 if ($defer > 0) {
                     $redis->zadd($this->redisKey() . ":delayed", $id, time() + $defer);
                 }
-                $redis->exec();
+                $ret = $redis->exec();
+                if ($ret[0]) {
+                    $queue->push($id);
+                }
             } catch (Throwable $throwable) {
                 $this->logger->error(sprintf('Error in Redis operation or channel push [%s]', $throwable->getMessage()));
             }
