@@ -78,7 +78,6 @@ class NsqConsumer extends AbstractConsumer
         $this->setTopic($this->queue->getTopic());
         $this->setChannel($this->queue->getChannel());
         $this->setName($this->getShortCLassName());
-        $this->setNums(2);
         //set nsq pool
         $this->setPool('default');
         $this->timerId          = Timer::tick($this->interval, function ()
