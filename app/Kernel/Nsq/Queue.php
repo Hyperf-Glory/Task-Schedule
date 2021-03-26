@@ -100,11 +100,11 @@ class Queue extends AbstractQueue
                     $redis->zadd($this->redisKey() . ":delayed", $id, time() + $defer);
                 }
                 $ret = $redis->exec();
-                if ($ret[0]) {
-                    $queue->push($id);
+                if (!$ret[0]) {
+                    //channel push failed.
+                    throw new RuntimeException(sprintf('Redis Multi Exec Action [%s] Failed.', 'hset'));
                 }
-                //channel push failed.
-                throw new RuntimeException(sprintf('Redis Multi Exec Action [%s] Failed.', 'hset'));
+                $queue->push($id);
             } catch (Throwable $throwable) {
                 $this->logger->error(sprintf('Error in Redis operation or channel push [%s]', $throwable->getMessage()));
                 $queue->close();
