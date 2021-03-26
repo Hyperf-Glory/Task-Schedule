@@ -18,9 +18,9 @@ class ClosureSerializer implements NormalizerInterface
     /**
      * @param mixed $object
      *
-     * @return null|array|\ArrayObject|bool|float|int|string
+     * @return null|string
      */
-    public function normalize($object)
+    public function normalize($object) : ?string
     {
         if (!is_callable($object)) {
             throw new \InvalidArgumentException('Argument invalid, it must be callable.');
