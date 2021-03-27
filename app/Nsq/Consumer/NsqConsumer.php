@@ -25,7 +25,7 @@ use Swoole\Timer;
 use Throwable;
 
 /**
- * @Consumer()
+ * @Consumer(nums=2)
  */
 class NsqConsumer extends AbstractConsumer
 {
@@ -76,7 +76,7 @@ class NsqConsumer extends AbstractConsumer
             'channel' => $this->channel
         ]);
         $this->setTopic($this->queue->getTopic());
-        $this->setChannel($this->queue->getChannel());
+        $this->setChannel($this->queue->getChannel() . uniqid('task-schedule', true));
         $this->setName($this->getShortCLassName());
         //set nsq pool
         $this->setPool('default');
@@ -102,13 +102,7 @@ class NsqConsumer extends AbstractConsumer
         try {
             $this->handle((int)$id);
         } catch (Throwable $e) {
-            $this->logger->error(sprintf(
-                'Uncaptured exception[%s:%s] detected in %s::%d.',
-                get_class($e),
-                $e->getMessage(),
-                $e->getFile(),
-                $e->getLine()
-            ), [
+            $this->logger->error(sprintf('Uncaptured exception[%s:%s] detected in %s::%d.', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()), [
                 'driver'  => get_class($this->queue),
                 'channel' => $this->queue->getChannel(),
                 'id'      => $id,
@@ -118,7 +112,7 @@ class NsqConsumer extends AbstractConsumer
                     $this->queue->release($id, 60);
                 }
             } catch (Throwable $e) {
-                $this->logger->error($e->getMessage());
+                $this->logger->error(format_throwable($e));
             }
             return Result::DROP;
         }
@@ -143,14 +137,14 @@ class NsqConsumer extends AbstractConsumer
                 throw new InvalidArgumentException('Job popped is empty.');
             }
             $this->queue->attemptsIncr($id);
-            echo Color::GREEN, sprintf('Task ID:[%s] Time:[%s] start execution#', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
+            echo Color::GREEN, sprintf('Task ID:[%s] Time:[%s] start execution#.', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
             is_callable($job) ? $job() : $this->pipeline->send($job)
                                                         ->through($job->middleware())
                                                         ->then(function (JobInterface $job)
                                                         {
                                                             $job->handle();
                                                         });
-            echo Color::YELLOW, sprintf('Task ID:[%s] Time:[%s] completed#', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
+            echo Color::YELLOW, sprintf('Task ID:[%s] Time:[%s] completed#.', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
             $this->queue->remove($id);
         } catch (Throwable $throwable) {
             $attempts = (int)($attempts ?? 0);
