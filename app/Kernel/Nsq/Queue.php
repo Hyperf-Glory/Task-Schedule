@@ -68,9 +68,7 @@ class Queue extends AbstractQueue
      */
     public function push($message, float $defer = 0) : void
     {
-        $serializedMessage = null;
-        $serializerType    = null;
-        $queue             = new Channel(1);
+        $queue = new Channel(1);
         Coroutine::create(function () use ($queue, $message, &$serializerType, &$serializedMessage, $defer)
         {
             try {
