@@ -11,6 +11,7 @@ use App\Model\VertexEdge;
 use Hyperf\Dag\Dag;
 use Hyperf\Dag\Vertex;
 use Hyperf\Utils\Coroutine;
+use PDO;
 use PDOException;
 use Throwable;
 
@@ -24,13 +25,14 @@ class DagController extends AbstractController
 
     public function conCurrentMySQL() : void
     {
-        $dsn      = '';
-        $user     = '';
-        $password = '';
+        $dsn      = sprintf('mysql:%s;port=%s;dbname=%s;', env('DB_HOST'), env('DB_PORT'), env('DB_DATABASE'));
+        $user     = env('DB_USERNAME');
+        $password = env('DB_PASSWORD');
         try {
-            $pdo = new \PDO($dsn, $user, $password);
-            $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+            $pdo = new PDO($dsn, $user, $password);
+            $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
             $c = new ConcurrentMySQLPattern($pdo, $this->logger);
+            //Close Pdo
             Coroutine::defer(static function () use ($c)
             {
                 $c->close();
