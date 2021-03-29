@@ -2,7 +2,7 @@
 
 基于Hyperf开发的任务调度系统
 
-基于 Hyperf 的一个异步队列库，可弹性伸缩的工作进程池，工作进程协程支持.
+基于 Hyperf + Nsq 的一个异步队列库.支持投递任务，DAG任务编排.多个任务使用同一个事务。
 
 ## 特性
 
@@ -13,7 +13,7 @@
 - 支持任务执行中间件
 - 自定义队列快照事件
 - 弹性多进程消费
-- 工作进程协程支持
+- 协程支持
 - 漂亮的仪表盘
 - 任务编排协程安全的单连接模式(事务保持、多路复用等条件下，有时必须使用一个连接)
 - dag任务编排
@@ -23,6 +23,7 @@
 - PHP 7.4+
 - Swoole 4.6+
 - Redis 5.0+ (redis 驱动)
+- Nsq 1.2.0
 
 ## TODO
 
@@ -62,9 +63,9 @@ use App\Dag\Task\Task3;
 class Example{
 public function conCurrentMySQL() : void
     {
-        $dsn      = '';
-        $user     = '';
-        $password = '';
+        $dsn      = 'DSN';
+        $user     = 'USER';
+        $password = 'PWD';
         try {
             $pdo = new \PDO($dsn, $user, $password);
             $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
