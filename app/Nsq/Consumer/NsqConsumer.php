@@ -25,7 +25,7 @@ use Swoole\Timer;
 use Throwable;
 
 /**
- * @Consumer(nums=1)
+ * @Consumer(nums=2)
  */
 class NsqConsumer extends AbstractConsumer
 {
