@@ -137,7 +137,7 @@ class Queue extends AbstractQueue
      */
     public function remove(int $id) : void
     {
-        Coroutine::create(function () use ($id)
+        wait(function () use ($id)
         {
             $redis = $this->redis();
             $redis->eval(
