@@ -162,7 +162,7 @@ class Queue extends AbstractQueue
      */
     public function release(int $id, int $delay = 0) : void
     {
-        Coroutine::create(function () use ($id, $delay)
+        wait(function () use ($id, $delay)
         {
             $redis = $this->redis();
             $redis->eval(
@@ -175,7 +175,7 @@ class Queue extends AbstractQueue
                 ],
                 2
             );
-        });
+        }, $this->waiterTimeout);
     }
 
     /**
@@ -186,7 +186,7 @@ class Queue extends AbstractQueue
      */
     public function failed(int $id, string $payload = null) : void
     {
-        Coroutine::create(function () use ($id, $payload)
+        wait(function () use ($id, $payload)
         {
             $redis = $this->redis();
             $redis->eval(
@@ -199,7 +199,7 @@ class Queue extends AbstractQueue
                 ],
                 2
             );
-        });
+        }, $this->waiterTimeout);
     }
 
     /**
@@ -208,18 +208,21 @@ class Queue extends AbstractQueue
      */
     public function getFailed() : array
     {
-        $redis = $this->redis();
+        return wait(function ()
+        {
+            $redis = $this->redis();
 
-        $failedJobs = [];
-        $cursor     = 0;
-        do {
-            [$cursor, $data] = $redis->hscan($this->redisKey() . ":failed", $cursor, [
-                'COUNT' => 10,
-            ]);
-            $failedJobs += $data;
-        } while ($cursor !== 0);
+            $failedJobs = [];
+            $cursor     = 0;
+            do {
+                [$cursor, $data] = $redis->hscan($this->redisKey() . ":failed", $cursor, [
+                    'COUNT' => 10,
+                ]);
+                $failedJobs += $data;
+            } while ($cursor !== 0);
 
-        return $failedJobs;
+            return $failedJobs;
+        });
     }
 
     /**
@@ -229,9 +232,12 @@ class Queue extends AbstractQueue
      */
     public function clearFailed(int $id) : void
     {
-        $redis = $this->redis();
+        wait(function () use ($id)
+        {
+            $redis = $this->redis();
 
-        $redis->hdel($this->redisKey() . ":failed", (string)$id);
+            $redis->hdel($this->redisKey() . ":failed", (string)$id);
+        });
     }
 
     /**
@@ -242,16 +248,19 @@ class Queue extends AbstractQueue
      */
     public function reloadFailed(int $id, int $delay = 0) : void
     {
-        $redis = $this->redis();
-        $redis->eval(
-            LuaScript::reloadFail(),
-            [
-                $this->redisKey() . ":delayed",
-                $this->redisKey() . ":failed",
-                $id,
-                time() + $delay
-            ], 2
-        );
+        wait(function () use ($id, $delay)
+        {
+            $redis = $this->redis();
+            $redis->eval(
+                LuaScript::reloadFail(),
+                [
+                    $this->redisKey() . ":delayed",
+                    $this->redisKey() . ":failed",
+                    $id,
+                    time() + $delay
+                ], 2
+            );
+        }, $this->waiterTimeout);
     }
 
     /**
@@ -314,19 +323,22 @@ class Queue extends AbstractQueue
      */
     public function status() : array
     {
-        $redis = $this->redis();
+        return wait(function ()
+        {
+            $redis = $this->redis();
 
-        $pipe = $redis->pipeline();
-        $pipe->get($this->redisKey() . ":message_id");
-        $pipe->zcard($this->redisKey() . ":reserved");
-        $pipe->llen($this->redisKey() . ":waiting");
-        $pipe->zcount($this->redisKey() . ":delayed", '-inf', '+inf');
-        $pipe->hlen($this->redisKey() . ":failed");
-        [$total, $reserved, $waiting, $delayed, $failed] = $pipe->exec();
+            $pipe = $redis->pipeline();
+            $pipe->get($this->redisKey() . ":message_id");
+            $pipe->zcard($this->redisKey() . ":reserved");
+            $pipe->llen($this->redisKey() . ":waiting");
+            $pipe->zcount($this->redisKey() . ":delayed", '-inf', '+inf');
+            $pipe->hlen($this->redisKey() . ":failed");
+            [$total, $reserved, $waiting, $delayed, $failed] = $pipe->exec();
 
-        $done = ($total ?? 0) - $waiting - $delayed - $reserved - $failed;
+            $done = ($total ?? 0) - $waiting - $delayed - $reserved - $failed;
 
-        return [$waiting, $reserved, $delayed, $done, $failed, $total ?? 0];
+            return [$waiting, $reserved, $delayed, $done, $failed, $total ?? 0];
+        }, $this->waiterTimeout);
     }
 
     /**
@@ -334,11 +346,14 @@ class Queue extends AbstractQueue
      */
     public function retryReserved() : void
     {
-        $redis = $this->redis();
-        $ids   = $redis->zrange($this->redisKey() . ":reserved", 0, -1);
-        foreach ($ids as $id) {
-            $this->release((int)$id);
-        }
+        wait(function ()
+        {
+            $redis = $this->redis();
+            $ids   = $redis->zrange($this->redisKey() . ":reserved", 0, -1);
+            foreach ($ids as $id) {
+                $this->release((int)$id);
+            }
+        }, $this->waiterTimeout);
     }
 
     /**
@@ -352,7 +367,10 @@ class Queue extends AbstractQueue
 
     public function attemptsIncr(int $id) : void
     {
-        $this->redis()->hIncrBy($this->redisKey() . ":attempts", (string)$id, 1);
+        wait(function () use ($id)
+        {
+            $this->redis()->hIncrBy($this->redisKey() . ":attempts", (string)$id, 1);
+        }, $this->waiterTimeout);
     }
 
     /**

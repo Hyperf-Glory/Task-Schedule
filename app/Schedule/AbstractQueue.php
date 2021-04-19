@@ -14,6 +14,12 @@ use App\Component\Serializer\ClosureSerializer;
 
 abstract class AbstractQueue implements QueueInterface
 {
+
+    /**
+     * @var float
+     */
+    protected $waiterTimeout = 5.0;
+
     /**
      * @var string
      */

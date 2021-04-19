@@ -25,7 +25,7 @@ use Swoole\Timer;
 use Throwable;
 
 /**
- * @Consumer(nums=2)
+ * @Consumer(nums=1)
  */
 class NsqConsumer extends AbstractConsumer
 {
@@ -94,7 +94,6 @@ class NsqConsumer extends AbstractConsumer
     public function consume(Message $message) : ?string
     {
         ['id' => $id] = $this->jsonSerializer->denormalize($message->getBody());
-
         if (!$id) {
             $this->logger->error('Invalid task ID:' . $id);
             return Result::DROP;

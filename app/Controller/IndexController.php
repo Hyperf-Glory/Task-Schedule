@@ -57,10 +57,8 @@ class IndexController extends AbstractController
      */
     public function queue() : void
     {
-        $task = Task::find(1);
-
-        $job = new SimpleJob($task);
-
+        $task  = Task::find(1);
+        $job   = new SimpleJob($task);
         $queue = new Queue('queue');
         $queue->push($job);
     }
