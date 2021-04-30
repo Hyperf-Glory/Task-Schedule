@@ -1,7 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Kernel\Lock;
 
 use Hyperf\Redis\Redis;
@@ -9,6 +13,8 @@ use Swoole\Coroutine;
 
 class RedisLock
 {
+    protected const REDIS_LOCK_PREFIX = 'redis:lock:';
+
     /**
      * redis key前缀
      */
@@ -22,26 +28,16 @@ class RedisLock
     /**
      * @var Redis
      */
-    private $redis = null;
-
-    /**
-     *
-     */
-    protected const REDIS_LOCK_PREFIX = 'redis:lock:';
+    private $redis;
 
     /**
      * RedisLock constructor.
-     *
-     * @param \Hyperf\Redis\Redis $redis
      */
     public function __construct(Redis $redis)
     {
         $this->redis = $redis;
     }
 
-    /**
-     *
-     */
     private function __clone()
     {
     }
@@ -49,18 +45,18 @@ class RedisLock
     /**
      * 上锁
      *
-     * @param string    $name       锁名字
-     * @param int       $expire     锁有效期
-     * @param int       $retryTimes 重试次数
-     * @param float|int $sleep      重试休息微秒
+     * @param string $name 锁名字
+     * @param int $expire 锁有效期
+     * @param int $retryTimes 重试次数
+     * @param float|int $sleep 重试休息微秒
      *
      * @return mixed
      */
-    public function lock(string $name, int $expire = 5, int $retryTimes = 10, float $sleep = 10000) : bool
+    public function lock(string $name, int $expire = 5, int $retryTimes = 10, float $sleep = 10000): bool
     {
-        $lock       = false;
+        $lock = false;
         $retryTimes = max($retryTimes, 1);
-        $key        = self::REDIS_LOCK_KEY_PREFIX . $name;
+        $key = self::REDIS_LOCK_KEY_PREFIX . $name;
         while ($retryTimes-- > 0) {
             $kVal = microtime(true) + $expire;
             $lock = $this->getLock($key, $expire, $kVal); //上锁
@@ -69,12 +65,61 @@ class RedisLock
                 break;
             }
             if (\Hyperf\Utils\Coroutine::inCoroutine()) {
-                Coroutine::sleep((float)$sleep / 1000);
+                Coroutine::sleep((float) $sleep / 1000);
             } else {
                 usleep($sleep);
             }
         }
         return $lock;
+    }
+
+    /**
+     * 解锁
+     *
+     * @return mixed
+     */
+    public function unlock(string $name): bool
+    {
+        $script = <<<'LUA'
+            local key = KEYS[1]
+            local value = ARGV[1]
+
+            if (redis.call('exists', key) == 1 and redis.call('get', key) == value) 
+            then
+                return redis.call('del', key)
+            end
+
+            return 0
+LUA;
+        $key = self::REDIS_LOCK_KEY_PREFIX . $name;
+        if (isset($this->lockedNames[$key])) {
+            $val = $this->lockedNames[$key];
+            return $this->execLuaScript($script, [$key, $val]);
+        }
+        return false;
+    }
+
+    /**
+     * 获取锁并执行.
+     *
+     * @param int $sleep
+     *
+     * @throws \Exception
+     */
+    public function run(callable $func, string $name, int $expire = 5, int $retryTimes = 10, $sleep = 10000): bool
+    {
+        if ($this->lock($name, $expire, $retryTimes, $sleep)) {
+            try {
+                $func();
+            } catch (\Exception $e) {
+                throw $e;
+            } finally {
+                $this->unlock($name);
+            }
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -88,7 +133,7 @@ class RedisLock
      */
     private function getLock($key, $expire, $value)
     {
-        $script = <<<LUA
+        $script = <<<'LUA'
             local key = KEYS[1]
             local value = ARGV[1]
             local ttl = ARGV[2]
@@ -105,39 +150,9 @@ LUA;
     }
 
     /**
-     * 解锁
+     * 执行lua脚本.
      *
-     * @param string $name
-     *
-     * @return mixed
-     */
-    public function unlock(string $name) : bool
-    {
-        $script = <<<LUA
-            local key = KEYS[1]
-            local value = ARGV[1]
-
-            if (redis.call('exists', key) == 1 and redis.call('get', key) == value) 
-            then
-                return redis.call('del', key)
-            end
-
-            return 0
-LUA;
-        $key    = self::REDIS_LOCK_KEY_PREFIX . $name;
-        if (isset($this->lockedNames[$key])) {
-            $val = $this->lockedNames[$key];
-            return $this->execLuaScript($script, [$key, $val]);
-        }
-        return false;
-    }
-
-    /**
-     * 执行lua脚本
-     *
-     * @param string $script
-     * @param array  $params
-     * @param int    $keyNum
+     * @param int $keyNum
      *
      * @return mixed
      */
@@ -145,34 +160,5 @@ LUA;
     {
         $hash = $this->redis->script('load', $script);
         return $this->redis->evalSha($hash, $params, $keyNum);
-    }
-
-    /**
-     * 获取锁并执行
-     *
-     * @param callable $func
-     * @param string   $name
-     * @param int      $expire
-     * @param int      $retryTimes
-     * @param int      $sleep
-     *
-     * @return bool
-     * @throws \Exception
-     */
-    public function run(callable $func, string $name, int $expire = 5, int $retryTimes = 10, $sleep = 10000) : bool
-    {
-        if ($this->lock($name, $expire, $retryTimes, $sleep)) {
-            try {
-                $func();
-            } catch (\Exception $e) {
-                throw $e;
-            }
-            finally {
-                $this->unlock($name);
-            }
-            return true;
-        }
-
-        return false;
     }
 }

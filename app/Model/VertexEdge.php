@@ -1,6 +1,11 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Model;
 
 /**
@@ -17,12 +22,14 @@ class VertexEdge extends Model
      * @var string
      */
     protected $table = 'vertex_edge';
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = ['id', 'workflow_id', 'task_id', 'pid'];
+
     /**
      * The attributes that should be cast to native types.
      *

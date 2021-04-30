@@ -1,6 +1,11 @@
 <?php
-declare(strict_types = 1);
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Controller;
 
 use App\Dag\Task\Task1;
@@ -17,47 +22,41 @@ use Throwable;
 
 class DagController extends AbstractController
 {
-
     /**
      * @var array<Vertex>
      */
     public $vertex;
 
-    public function conCurrentMySQL() : void
+    public function conCurrentMySQL(): void
     {
-        $dsn      = sprintf('mysql:%s;port=%s;dbname=%s;', env('DB_HOST'), env('DB_PORT'), env('DB_DATABASE'));
-        $user     = env('DB_USERNAME');
+        $dsn = sprintf('mysql:%s;port=%s;dbname=%s;', env('DB_HOST'), env('DB_PORT'), env('DB_DATABASE'));
+        $user = env('DB_USERNAME');
         $password = env('DB_PASSWORD');
         try {
             $pdo = new PDO($dsn, $user, $password);
             $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
             $c = new ConcurrentMySQLPattern($pdo, $this->logger);
             //Close Pdo
-            Coroutine::defer(static function () use ($c)
-            {
+            Coroutine::defer(static function () use ($c) {
                 $c->close();
             });
             $c->beginTransaction();
-            $dag     = new \Hyperf\Dag\Dag();
-            $a       = \Hyperf\Dag\Vertex::make(function () use ($c)
-            {
+            $dag = new \Hyperf\Dag\Dag();
+            $a = \Hyperf\Dag\Vertex::make(function () use ($c) {
                 $task = new Task1();
                 return $task->Run($c);
             }, 'a');
-            $b       = \Hyperf\Dag\Vertex::make(function ($results) use ($c)
-            {
+            $b = \Hyperf\Dag\Vertex::make(function ($results) use ($c) {
                 $task = new Task2();
                 return $task->Run($c);
             }, 'b');
-            $d       = \Hyperf\Dag\Vertex::make(function ($results) use ($c, $a, $b)
-            {
+            $d = \Hyperf\Dag\Vertex::make(function ($results) use ($c, $a, $b) {
                 if ($results[$a->key] && $results[$b->key]) {
                     return $c->commit();
                 }
                 return $c->rollback();
             }, 'd');
-            $e       = \Hyperf\Dag\Vertex::make(function ($results) use ($c)
-            {
+            $e = \Hyperf\Dag\Vertex::make(function ($results) use ($c) {
                 $c->close();
             }, 'e');
             $results = $dag
@@ -74,11 +73,10 @@ class DagController extends AbstractController
         }
     }
 
-    public function index() : void
+    public function index(): void
     {
-        $dag   = new Dag();
-        $start = Vertex::make(function ()
-        {
+        $dag = new Dag();
+        $start = Vertex::make(function () {
             echo "start\n";
         });
         $dag->addVertex($start);
@@ -89,22 +87,20 @@ class DagController extends AbstractController
          * @var Task $value
          */
         foreach ($task as $key => $value) {
-            $this->vertex[$value->name] = Vertex::make(static function () use ($value)
-            {
+            $this->vertex[$value->name] = Vertex::make(static function () use ($value) {
                 sleep(1);
                 echo $value->name . "\n";
             });
             $dag->addVertex($this->vertex[$value->name]);
         }
-        $end = Vertex::make(function ()
-        {
+        $end = Vertex::make(function () {
             echo "end\n";
         });
         $dag->addVertex($end);
         $source = VertexEdge::query()->leftJoin('task', 'vertex_edge.task_id', '=', 'task.id')->select([
             'task.name',
             'vertex_edge.task_id',
-            'vertex_edge.pid'
+            'vertex_edge.pid',
         ])->get()->toArray();
         $this->tree($dag, $source, 0);
         try {
@@ -113,7 +109,7 @@ class DagController extends AbstractController
         }
     }
 
-    private function tree(Dag $dag, array $source, int $pid = 0) : array
+    private function tree(Dag $dag, array $source, int $pid = 0): array
     {
         $tree = [];
         foreach ($source as $v) {

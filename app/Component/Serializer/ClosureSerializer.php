@@ -1,6 +1,11 @@
 <?php
-declare(strict_types = 1);
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Component\Serializer;
 
 use Hyperf\Contract\NormalizerInterface;
@@ -17,12 +22,10 @@ class ClosureSerializer implements NormalizerInterface
 
     /**
      * @param mixed $object
-     *
-     * @return null|string
      */
-    public function normalize($object) : ?string
+    public function normalize($object): ?string
     {
-        if (!is_callable($object)) {
+        if (! is_callable($object)) {
             throw new \InvalidArgumentException('Argument invalid, it must be callable.');
         }
 
@@ -30,8 +33,7 @@ class ClosureSerializer implements NormalizerInterface
     }
 
     /**
-     * @param mixed  $data
-     * @param string $class
+     * @param mixed $data
      *
      * @return \Closure|mixed|object
      */

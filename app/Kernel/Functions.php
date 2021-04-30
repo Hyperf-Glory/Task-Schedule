@@ -1,7 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 use Hyperf\AsyncQueue\Driver\DriverFactory;
 use Hyperf\AsyncQueue\JobInterface;
 use Hyperf\ExceptionHandler\Formatter\FormatterInterface;
@@ -9,7 +13,7 @@ use Hyperf\Utils\ApplicationContext;
 use Hyperf\Utils\Context;
 use Psr\Http\Message\ServerRequestInterface;
 
-if (!function_exists('di')) {
+if (! function_exists('di')) {
     /**
      * Finds an entry of the container by its identifier and returns it.
      *
@@ -28,42 +32,36 @@ if (!function_exists('di')) {
     }
 }
 
-if (!function_exists('format_throwable')) {
+if (! function_exists('format_throwable')) {
     /**
      * Format a throwable to string.
      *
      * @param \Throwable $throwable
      */
-    function format_throwable(Throwable $throwable) : string
+    function format_throwable(Throwable $throwable): string
     {
         return di()->get(FormatterInterface::class)->format($throwable);
     }
 }
 
-if (!function_exists('queue_push')) {
+if (! function_exists('queue_push')) {
     /**
      * Push a job to async queue.
-     *
-     * @param \Hyperf\AsyncQueue\JobInterface $job
-     * @param int                             $delay
-     * @param string                          $key
-     *
-     * @return bool
      */
-    function queue_push(JobInterface $job, int $delay = 0, string $key = 'default') : bool
+    function queue_push(JobInterface $job, int $delay = 0, string $key = 'default'): bool
     {
         $driver = di()->get(DriverFactory::class)->get($key);
         return $driver->push($job, $delay);
     }
 }
-if (!function_exists('verifyIp')) {
+if (! function_exists('verifyIp')) {
     function verifyIp($realip)
     {
         return filter_var($realip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
     }
 }
-if (!function_exists('getClientIp')) {
-    function getClientIp() : string
+if (! function_exists('getClientIp')) {
+    function getClientIp(): string
     {
         try {
             /**

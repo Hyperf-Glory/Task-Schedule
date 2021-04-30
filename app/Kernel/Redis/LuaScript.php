@@ -1,6 +1,11 @@
 <?php
-declare(strict_types = 1);
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Kernel\Redis;
 
 class LuaScript
@@ -12,10 +17,8 @@ class LuaScript
      * KEYS[2] - The "reserved" set we reserve jobs onto, for example: queues:foo:reserved
      * KEYS[3] - The "attempt" queue we record jobs' attempt number, for example: queues:foo:attempts
      * ARGV[1] - The UNIX timestamp when job's handle timeout
-     *
-     * @return string
      */
-    public static function pop() : string
+    public static function pop(): string
     {
         return <<<'LUA'
 -- Pop a job from queue...
@@ -36,10 +39,8 @@ LUA;
      * KEYS[2] - The queue the jobs are currently on, for example: queues:foo:reserved
      * ARGV[1] - The id of delayed job will be added onto the "delayed" queue
      * ARGV[2] - The UNIX timestamp at which the job should become available
-     *
-     * @return string
      */
-    public static function release() : string
+    public static function release(): string
     {
         return <<<'LUA'
 -- Remove the job from the current queue...
@@ -59,10 +60,8 @@ LUA;
      * KEYS[2] - The queue the jobs are currently on, for example: queues:foo:fail
      * ARGV[1] - The id of delayed job will be added onto the "delayed" queue
      * ARGV[2] - The UNIX timestamp at which the job should become available
-     *
-     * @return string
      */
-    public static function reloadFail() : string
+    public static function reloadFail(): string
     {
         return <<<'LUA'
 -- Remove the job from the current queue...
@@ -82,10 +81,8 @@ LUA;
      * KEYS[2] - The queue the jobs are currently on, for example: queues:foo:reserved
      * ARGV[1] - The id of failed job will be added onto the "failed" set
      * ARGV[2] - Payload of failed job execution
-     *
-     * @return string
      */
-    public static function fail() : string
+    public static function fail(): string
     {
         return <<<'LUA'
 if (ARGV[1] ~= nil) then
@@ -103,10 +100,8 @@ LUA;
      * KEYS[2] - The queue the jobs' failed stored set, for example: queues:foo:failed
      * KEYS[3] - The queue the jobs' message stored set, for example: queues:foo:messages
      * ARGV[1] - The id of the job will be removed from queue
-     *
-     * @return string
      */
-    public static function remove() : string
+    public static function remove(): string
     {
         return <<< 'LUA'
 if (ARGV[1] ~= nil) then
@@ -124,10 +119,8 @@ LUA;
      * KEYS[1] - The queue we are removing jobs from, for example: queues:foo:delayed
      * KEYS[2] - The queue we are moving jobs to, for example: queues:foo:waiting
      * ARGV[1] - The current UNIX timestamp
-     *
-     * @return string
      */
-    public static function migrateExpiredJobs() : string
+    public static function migrateExpiredJobs(): string
     {
         return <<<'LUA'
 -- Get all of the jobs with an expired "score"...

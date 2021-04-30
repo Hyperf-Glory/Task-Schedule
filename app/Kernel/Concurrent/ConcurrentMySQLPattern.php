@@ -1,6 +1,11 @@
 <?php
-declare(strict_types = 1);
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Kernel\Concurrent;
 
 use App\Kernel\Concurrent\Exception\MySQLRuntimeException;
@@ -31,32 +36,28 @@ class ConcurrentMySQLPattern
 
     public function __construct(PDO $PDO, LoggerInterface $logger)
     {
-        $this->PDO    = $PDO;
+        $this->PDO = $PDO;
         $this->logger = $logger;
     }
 
-    /**
-     * @return bool
-     */
-    public function isTransaction() : bool
+    public function isTransaction(): bool
     {
         return $this->PDO->inTransaction();
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return $this->PDO !== null;
     }
 
-    public function loop() : void
+    public function loop(): void
     {
         $this->chan = new Channel(1);
-        Coroutine::create(function ()
-        {
+        Coroutine::create(function () {
             while (true) {
                 try {
                     $closure = $this->chan->pop();
-                    if (!$closure) {
+                    if (! $closure) {
                         break;
                     }
                     $closure->call($this);
@@ -69,10 +70,9 @@ class ConcurrentMySQLPattern
         });
 
         static $once;
-        if (!isset($once)) {
+        if (! isset($once)) {
             $once = true;
-            Coroutine::create(function ()
-            {
+            Coroutine::create(function () {
                 CoordinatorManager::until(Constants::WORKER_EXIT)->yield();
                 if ($this->chan) {
                     $this->chan->close();
@@ -82,25 +82,22 @@ class ConcurrentMySQLPattern
     }
 
     /**
-     * Open the transaction
-     *
-     * @return bool
+     * Open the transaction.
      */
-    public function beginTransaction() : bool
+    public function beginTransaction(): bool
     {
-        if (!$this->chan) {
+        if (! $this->chan) {
             $this->loop();
         }
         return $this->PDO->beginTransaction();
     }
 
     /**
-     * Transaction commit
-     * @return bool
+     * Transaction commit.
      */
-    public function commit() : bool
+    public function commit(): bool
     {
-        if (!$this->chan) {
+        if (! $this->chan) {
             $this->loop();
         }
         if ($this->PDO->inTransaction()) {
@@ -110,12 +107,11 @@ class ConcurrentMySQLPattern
     }
 
     /**
-     * Transaction rollback
-     * @return bool
+     * Transaction rollback.
      */
-    public function rollback() : bool
+    public function rollback(): bool
     {
-        if (!$this->chan) {
+        if (! $this->chan) {
             $this->loop();
         }
         if ($this->PDO->inTransaction()) {
@@ -127,29 +123,24 @@ class ConcurrentMySQLPattern
     /**
      * Close the mysql.
      */
-    public function close() : void
+    public function close(): void
     {
-        if (!Coroutine::inCoroutine()) {
+        if (! Coroutine::inCoroutine()) {
             $this->PDO = null;
             return;
         }
 
-        if (!$this->chan) {
+        if (! $this->chan) {
             $this->loop();
         }
 
-        $this->chan->push(function ()
-        {
+        $this->chan->push(function () {
             $this->PDO = null;
         });
     }
 
-    /**
-     * @return \PDO
-     */
-    public function getPDO() : PDO
+    public function getPDO(): PDO
     {
         return $this->PDO;
     }
-
 }

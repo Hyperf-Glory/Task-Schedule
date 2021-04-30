@@ -1,14 +1,17 @@
 <?php
-declare(strict_types = 1);
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Component\Hashids;
 
 use Hashids\Hashids as CoreHashids;
-use Psr\Container\ContainerInterface;
 
 /**
- * Class Hashids
- * @package App\Component\Hashids
+ * Class Hashids.
  * @method encode(...$params)
  * @method decode(string $hash)
  * @method encodeHex(string $str)
@@ -34,9 +37,9 @@ class Hashids
      */
     public function __call($method, $params)
     {
-        if (!method_exists($this->hashids, $method)) {
+        if (! method_exists($this->hashids, $method)) {
             throw new HashidsMethodNotExistsException(sprintf('Hashids method#:%s not exist.', $method));
         }
-        return $this->hashids->$method($params);
+        return $this->hashids->{$method}($params);
     }
 }

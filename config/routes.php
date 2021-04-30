@@ -1,7 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 use Hyperf\HttpServer\Router\Router;
 
 Router::addRoute(['GET', 'POST', 'HEAD'], '/', 'App\Controller\IndexController@index');
@@ -13,7 +17,6 @@ Router::addRoute(['GET', 'POST', 'HEAD'], '/queue', 'App\Controller\IndexControl
 Router::addRoute(['GET', 'POST', 'HEAD'], '/api/queue_status', 'App\Controller\IndexController@queueStatus');
 Router::addRoute(['GET', 'POST', 'HEAD'], '/dag/conCurrentMySQL', 'App\Controller\DagController@conCurrentMySQL');
 Router::addRoute(['GET', 'POST', 'HEAD'], '/dag/index', 'App\Controller\DagController@index');
-Router::get('/favicon.ico', function ()
-{
+Router::get('/favicon.ico', function () {
     return '';
 });

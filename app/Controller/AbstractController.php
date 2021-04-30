@@ -1,7 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Controller;
 
 use App\Kernel\Http\Response;
@@ -37,9 +41,8 @@ abstract class AbstractController
     protected $response;
 
     /**
-     * @Inject()
+     * @Inject
      * @var \Hyperf\Contract\StdoutLoggerInterface
      */
     protected $logger;
-
 }

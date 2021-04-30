@@ -1,15 +1,19 @@
 <?php
-declare(strict_types = 1);
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Constants;
 
 use Hyperf\Constants\AbstractConstants;
 use Hyperf\Constants\Annotation\Constants;
 
 /**
- * Class Serializer
- * @package App\Constants
- * @Constants()
+ * Class Serializer.
+ * @Constants
  */
 class Serializer extends AbstractConstants
 {

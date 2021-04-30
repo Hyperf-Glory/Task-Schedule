@@ -1,6 +1,11 @@
 <?php
-declare(strict_types = 1);
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Controller;
 
 use App\Component\Hashids\Hashids;
@@ -14,32 +19,36 @@ use Psr\Http\Message\ResponseInterface;
 
 class IndexController extends AbstractController
 {
+    /**
+     * @var array<Vertex>
+     */
+    public $vertex;
 
-    public function index(RenderInterface $render) : ResponseInterface
+    public function index(RenderInterface $render): ResponseInterface
     {
         return $render->render('index');
     }
 
-    public function queueStatus() : ?ResponseInterface
+    public function queueStatus(): ?ResponseInterface
     {
         $queue = new Queue('queue');
         try {
             [$waiting, $reserved, $delayed, $done, $failed, $total] = $queue->status();
             $status = compact('waiting', 'reserved', 'failed', 'delayed', 'done', 'total');
-            $pie    = [];
+            $pie = [];
             foreach ($status as $tag => $item) {
-                if ('total' !== $tag) {
+                if ($tag !== 'total') {
                     $pie[] = [
                         'status' => $tag,
-                        'value'  => $item,
+                        'value' => $item,
                     ];
                 }
             }
 
             $line = array_merge(['time' => date('Y-m-d H:i:s')], $status);
             return $this->response->success('获取成功!', [
-                'pie'  => $pie,
-                'line' => $line
+                'pie' => $pie,
+                'line' => $line,
             ]);
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
@@ -48,18 +57,13 @@ class IndexController extends AbstractController
     }
 
     /**
-     * @var array<Vertex>
+     * 测试job队列功能.
      */
-    public $vertex;
-
-    /**
-     * 测试job队列功能
-     */
-    public function queue() : void
+    public function queue(): void
     {
         try {
-            $task  = Task::find(1);
-            $job   = new SimpleJob($task);
+            $task = Task::find(1);
+            $job = new SimpleJob($task);
             $queue = new Queue('queue');
             $queue->push($job);
         } catch (\Throwable $e) {
@@ -68,18 +72,17 @@ class IndexController extends AbstractController
     }
 
     /**
-     * 测试lua脚本
+     * 测试lua脚本.
      * @return mixed
      */
     public function lua()
     {
         $script = new Incr($this->container);
-        $id     = $script->eval(['short#link', 24 * 60 * 60]);
-        if (!$this->container->has(Hashids::class)) {
+        $id = $script->eval(['short#link', 24 * 60 * 60]);
+        if (! $this->container->has(Hashids::class)) {
             $this->container->set(Hashids::class, new Hashids());
         }
         $hashids = $this->container->get(Hashids::class);
         return $hashids->encode($id);
     }
-
 }

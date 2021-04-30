@@ -1,7 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Middleware;
 
 use Hyperf\Utils\Context;
@@ -12,13 +16,13 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class CorsMiddleware implements MiddlewareInterface
 {
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = Context::get(ResponseInterface::class);
         $response = $response->withHeader('Access-Control-Allow-Origin', '*')
-                             ->withHeader('Access-Control-Allow-Credentials', 'true')
+            ->withHeader('Access-Control-Allow-Credentials', 'true')
             // Headers 可以根据实际情况进行改写。
-                             ->withHeader('Access-Control-Allow-Headers', 'DNT,Keep-Alive,User-Agent,Cache-Control,Content-Type,Authorization');
+            ->withHeader('Access-Control-Allow-Headers', 'DNT,Keep-Alive,User-Agent,Cache-Control,Content-Type,Authorization');
 
         Context::set(ResponseInterface::class, $response);
 

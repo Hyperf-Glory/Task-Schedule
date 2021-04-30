@@ -1,7 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Listener;
 
 use Hyperf\Database\Events\QueryExecuted;
@@ -28,7 +32,7 @@ class DbQueryExecutedListener implements ListenerInterface
         $this->logger = $container->get(LoggerFactory::class)->get('sql', 'sql');
     }
 
-    public function listen() : array
+    public function listen(): array
     {
         return [
             QueryExecuted::class,
@@ -39,7 +43,7 @@ class DbQueryExecutedListener implements ListenerInterface
     {
         if ($event instanceof QueryExecuted) {
             $sql = $event->sql;
-            if (!Arr::isAssoc($event->bindings)) {
+            if (! Arr::isAssoc($event->bindings)) {
                 foreach ($event->bindings as $key => $value) {
                     $sql = Str::replaceFirst('?', "'{$value}'", $sql);
                 }

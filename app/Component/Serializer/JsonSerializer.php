@@ -1,6 +1,11 @@
 <?php
-declare(strict_types = 1);
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Component\Serializer;
 
 use Hyperf\Contract\NormalizerInterface;
@@ -18,14 +23,13 @@ class JsonSerializer implements NormalizerInterface
     }
 
     /**
-     * @param mixed       $data
-     * @param null|string $class
+     * @param mixed $data
      *
-     * @return mixed|array
+     * @return array|mixed
      */
-    public function denormalize($data, string $class = null) : array
+    public function denormalize($data, string $class = null): array
     {
-        $data   = sprintf('%s%s%s', pack('N', strlen($data)), $data, "\r\n");
+        $data = sprintf('%s%s%s', pack('N', strlen($data)), $data, "\r\n");
         $strlen = strlen($data);
         return swoole_substr_json_decode($data, 4, $strlen - 6, true);
     }

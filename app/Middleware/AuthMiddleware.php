@@ -1,38 +1,37 @@
-<?php declare(strict_types = 1);
+<?php
 
+declare(strict_types=1);
+/**
+ * This file is part of Task-Schedule.
+ *
+ * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
+ */
 namespace App\Middleware;
 
 use App\Service\ApplicationService;
-
-use Hyperf\Utils\Arr;
 use Hyperf\Di\Annotation\Inject;
+use Hyperf\Utils\Arr;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class AuthMiddleware implements MiddlewareInterface
 {
-    /**
-     * @Inject()
-     * @var  ApplicationService
-     */
-    private $_applicationService;
-
     /**
      * @var ContainerInterface
      */
     protected $container;
 
     /**
+     * @Inject
+     * @var ApplicationService
+     */
+    private $_applicationService;
+
+    /**
      * 初始化方法.
-     *
-     * @access public
-     *
-     * @param ContainerInterface $container
-     *
-     * @return void
      */
     public function __construct(ContainerInterface $container)
     {
@@ -42,14 +41,10 @@ class AuthMiddleware implements MiddlewareInterface
     /**
      * 处理方法.
      *
-     * @access public
-     *
-     * @param ServerRequestInterface  $request 数据请求
+     * @param ServerRequestInterface $request 数据请求
      * @param RequestHandlerInterface $handler 处理方法
-     *
-     * @return ResponseInterface
      */
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $status = ['code' => 0, 'data' => [], 'message' => ''];
 
@@ -69,11 +64,9 @@ class AuthMiddleware implements MiddlewareInterface
     }
 
     /**
-     * 校验签名
+     * 校验签名.
      *
-     * @access public
-     *
-     * @param ServerRequestInterface|Request $request
+     * @param Request|ServerRequestInterface $request
      *
      * @return array
      */
@@ -84,11 +77,11 @@ class AuthMiddleware implements MiddlewareInterface
         try {
             $data = $request->getParsedBody();
 
-            $appKey    = $request->getHeaderLine('app_key');
-            $nonceStr  = $request->getHeaderLine('nonce_str');
+            $appKey = $request->getHeaderLine('app_key');
+            $nonceStr = $request->getHeaderLine('nonce_str');
             $timestamp = $request->getHeaderLine('timestamp');
             $signature = $request->getHeaderLine('signature');
-            $version   = $request->getHeaderLine('version');
+            $version = $request->getHeaderLine('version');
 
             if (empty($appKey)) {
                 throw new \Exception('APP KEY不能为空！');
@@ -96,7 +89,7 @@ class AuthMiddleware implements MiddlewareInterface
 
             // 获取加密密钥
             $application = $this->_applicationService->getApplicationInfo($appKey);
-            $secretkey   = Arr::get($application, 'data.secret_key');
+            $secretkey = Arr::get($application, 'data.secret_key');
 
             if (empty($secretkey)) {
                 throw new \Exception('应用不存在或者未审核！');
@@ -134,9 +127,9 @@ class AuthMiddleware implements MiddlewareInterface
                 throw new \Exception('版本号输入有误！');
             }
 
-            $data['app_key']   = $appKey;
+            $data['app_key'] = $appKey;
             $data['nonce_str'] = $nonceStr;
-            $data['version']   = $version;
+            $data['version'] = $version;
             $data['timestamp'] = $timestamp;
 
             ksort($data);
