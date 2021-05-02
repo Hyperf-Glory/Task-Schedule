@@ -17,6 +17,7 @@ Router::addRoute(['GET', 'POST', 'HEAD'], '/queue', 'App\Controller\IndexControl
 Router::addRoute(['GET', 'POST', 'HEAD'], '/api/queue_status', 'App\Controller\IndexController@queueStatus');
 Router::addRoute(['GET', 'POST', 'HEAD'], '/dag/conCurrentMySQL', 'App\Controller\DagController@conCurrentMySQL');
 Router::addRoute(['GET', 'POST', 'HEAD'], '/dag/index', 'App\Controller\DagController@index');
+Router::addRoute(['GET', 'POST', 'HEAD'], '/task/index', 'App\Controller\TaskController@index');
 Router::get('/favicon.ico', function () {
     return '';
 });
