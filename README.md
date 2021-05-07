@@ -26,8 +26,10 @@
 - Nsq 1.2.0
 
 ## TODO
+- RestApi支持投递,查看任务状态
 - web界面
 - 分布式支持
+- 接入报警
 
 ## 案例
 
@@ -111,3 +113,6 @@ public function conCurrentMySQL() : void
 
 3.仪表盘
 ![img.png](img.png)
+
+4.TODO:
+![task-schedule.png](Task-Schedule.png)

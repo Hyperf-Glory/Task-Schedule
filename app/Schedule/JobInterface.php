@@ -20,7 +20,10 @@ interface JobInterface
     /**
      * Determine whether current job can retry if fail.
      *
-     * @param $error
+     * @param int $attempt
+     * @param     $error
+     *
+     * @return bool
      */
     public function canRetry(int $attempt, $error): bool;
 
