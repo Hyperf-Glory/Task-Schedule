@@ -141,8 +141,8 @@ class NsqConsumer extends AbstractConsumer
             is_callable($job) ? $job() : $this->pipeline->send($job)
                 ->through($job->middleware())
                 ->then(function (JobInterface $job) {
-                                                            $job->handle();
-                                                        });
+                    $job->handle();
+                });
             echo Color::YELLOW, sprintf('Task ID:[%s] Time:[%s] completed#.', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
             $this->queue->remove($id);
         } catch (Throwable $throwable) {

@@ -39,7 +39,7 @@ class Queue extends AbstractQueue
     public function getStatus(int $id): int
     {
         if ($id <= 0) {
-            throw new InvalidArgumentException("Invalid message ID: $id.");
+            throw new InvalidArgumentException("Invalid message ID: {$id}.");
         }
 
         $redis = $this->redis();
@@ -345,7 +345,7 @@ class Queue extends AbstractQueue
     public function get(int $id): array
     {
         if ($id <= 0) {
-            throw new InvalidArgumentException("Invalid message ID: $id.");
+            throw new InvalidArgumentException("Invalid message ID: {$id}.");
         }
         $chan = new Channel(1);
         Coroutine::create(function () use ($chan, $id) {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4831563faac1097c4ed2fb4fc075adb3",
+    "content-hash": "b2636f3fc326892a7b1d33f80ed837cd",
     "packages": [
         {
             "name": "bandwidth-throttle/token-bucket",
@@ -924,64 +924,6 @@
                 "source": "https://github.com/vinkla/hashids/tree/4.1.0"
             },
             "time": "2020-11-26T19:24:33+00:00"
-        },
-        {
-            "name": "hyperf-glory/alert-manager",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "./alert-manager",
-                "reference": "cfeccf6bfebbe123a765c3f43e8e45e0eec4ff17"
-            },
-            "require": {
-                "php": ">=7.3"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.14",
-                "mockery/mockery": "^1.0",
-                "phpstan/phpstan": "^0.12",
-                "phpunit/phpunit": ">=7.0",
-                "swoole/ide-helper": "dev-master",
-                "swow/swow": "dev-develop",
-                "symfony/var-dumper": "^5.1"
-            },
-            "type": "library",
-            "extra": {
-                "hyperf": {
-                    "config": "HyperfGlory\\AlertManager\\ConfigProvider"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "HyperfGlory\\AlertManager\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "HyperfTest\\": "tests"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit -c phpunit.xml --colors=always"
-                ],
-                "analyse": [
-                    "phpstan analyse --memory-limit 1024M -l 0 ./src"
-                ],
-                "cs-fix": [
-                    "php-cs-fixer fix $1"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "keywords": [
-                "hyperf",
-                "php"
-            ],
-            "transport-options": {
-                "relative": true
-            }
         },
         {
             "name": "hyperf/amqp",
@@ -11167,7 +11109,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "hyperf-glory/alert-manager": 20,
         "roave/security-advisories": 20
     },
     "prefer-stable": true,

@@ -15,6 +15,7 @@ use App\Kernel\Redis\Lua\Incr;
 use App\Model\Task;
 use Hyperf\Dag\Vertex;
 use Hyperf\View\RenderInterface;
+use HyperfGlory\AlertManager\DingTalk;
 use Psr\Http\Message\ResponseInterface;
 
 class IndexController extends AbstractController
@@ -46,6 +47,7 @@ class IndexController extends AbstractController
             }
 
             $line = array_merge(['time' => date('Y-m-d H:i:s')], $status);
+
             return $this->response->success('获取成功!', [
                 'pie' => $pie,
                 'line' => $line,
@@ -53,6 +55,7 @@ class IndexController extends AbstractController
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
         }
+
         return null;
     }
 
@@ -73,6 +76,7 @@ class IndexController extends AbstractController
 
     /**
      * 测试lua脚本.
+     *
      * @return mixed
      */
     public function lua()
@@ -83,6 +87,20 @@ class IndexController extends AbstractController
             $this->container->set(Hashids::class, new Hashids());
         }
         $hashids = $this->container->get(Hashids::class);
+
         return $hashids->encode($id);
+    }
+
+    public function alert()
+    {
+        try {
+            /**
+             * @var DingTalk $dingtalk
+             */
+            $dingtalk = make(DingTalk::class);
+            $dingtalk->text('呵呵');
+        } catch (\Throwable $e) {
+            echo $e->getMessage();
+        }
     }
 }
