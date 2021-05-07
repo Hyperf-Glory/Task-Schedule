@@ -46,7 +46,8 @@
         "hyperf/view-engine": "2.1.*",
         "jeremeamia/superclosure": "^2.4",
         "multiplex/multiplex": "^0.1.0",
-        "multiplex/socket": "^0.1.4"
+        "multiplex/socket": "^0.1.4",
+        "hyperf-glory/alert-manager": "dev-main"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
@@ -83,6 +84,12 @@
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
+    },
+    "repositories": {
+        "hyperf-glory/alert-manager": {
+            "type": "path",
+            "url": "./alert-manager/"
+        }
     },
     "extra": [],
     "scripts": {

@@ -9,3 +9,4 @@
 /.idea/
 /runtime/
 .env
+/alert-manager
