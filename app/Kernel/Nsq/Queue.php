@@ -63,7 +63,6 @@ class Queue extends AbstractQueue
 
     /**
      * {@inheritdoc}
-     *
      * @param \App\Schedule\JobInterface|\Closure $message
      */
     public function push($message, float $defer = 0): void
@@ -103,7 +102,11 @@ class Queue extends AbstractQueue
                 }
                 $queue->push($id);
             } catch (Throwable $throwable) {
-                $this->logger->error(sprintf('Error in Redis operation or channel push [%s]', $throwable->getMessage()));
+                $this->ding->text(sprintf('Error in Redis operation or channel push [%s]', $throwable->getMessage()));
+                $this->logger->error(sprintf(
+                    'Error in Redis operation or channel push [%s]',
+                    $throwable->getMessage()
+                ));
                 $queue->close();
             }
         });
@@ -119,10 +122,12 @@ class Queue extends AbstractQueue
                 $nsq = $this->nsq();
                 if (! $nsq->publish($this->topic, $this->jsonSerializer->normalize([
                     'id' => $id,
-                ]), $defer)) {
+                ]), $defer)
+                ) {
                     $this->logger->warning('Warning when job nsq push fail.');
                 }
             } catch (Throwable $e) {
+                $this->ding->text(sprintf('Error when job push fail.Message: [%s].', $e->getMessage()));
                 $this->logger->error(sprintf('Error when job push fail.Message: [%s].', $e->getMessage()));
             }
         });
@@ -355,7 +360,9 @@ class Queue extends AbstractQueue
             $payload = $redis->hget($this->redisKey() . ':messages', (string) $id);
 
             try {
-                if (empty($payload) || empty($message = $this->jsonSerializer->denormalize($payload)) || ! isset($message['serializerType'])) {
+                if (empty($payload) || empty($message = $this->jsonSerializer->denormalize($payload))
+                    || ! isset($message['serializerType'])
+                ) {
                     throw new InvalidArgumentException(sprintf('Broken message payload[%d]: %s', $id, $payload));
                 }
                 $chan->push([
@@ -372,6 +379,7 @@ class Queue extends AbstractQueue
         if ($chan->isClosing() || ! ($data = $chan->pop())) {
             throw new RuntimeException('Channel push false,Task ID:' . $id);
         }
+
         return $data;
     }
 

@@ -22,6 +22,7 @@ use Hyperf\Nsq\Nsq;
 use Hyperf\Nsq\Result;
 use Hyperf\Utils\Coroutine;
 use Hyperf\Utils\Pipeline;
+use HyperfGlory\AlertManager\DingTalk;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
@@ -69,6 +70,11 @@ class NsqConsumer extends AbstractConsumer
     protected $timerId;
 
     /**
+     * @var \HyperfGlory\AlertManager\DingTalk
+     */
+    protected $ding;
+
+    /**
      * @var int
      */
     protected $interval = 10000;
@@ -91,6 +97,7 @@ class NsqConsumer extends AbstractConsumer
         $this->objectSerializer = $this->container->get(ObjectSerializer::class);
         $this->pipeline = $this->container->get(Pipeline::class);
         $this->logger = $this->container->get(StdoutLoggerInterface::class);
+        $this->ding = make(DingTalk::class);
         $this->logger->info(sprintf('TimerTickID#%s started.', $this->timerId));
     }
 
@@ -99,12 +106,19 @@ class NsqConsumer extends AbstractConsumer
         ['id' => $id] = $this->jsonSerializer->denormalize($message->getBody());
         if (! $id) {
             $this->logger->error('Invalid task ID:' . $id);
+
             return Result::DROP;
         }
         try {
             $this->handle((int) $id);
         } catch (Throwable $e) {
-            $this->logger->error(sprintf('Uncaptured exception[%s:%s] detected in %s::%d.', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()), [
+            $this->logger->error(sprintf(
+                'Uncaptured exception[%s:%s] detected in %s::%d.',
+                get_class($e),
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            ), [
                 'driver' => get_class($this->queue),
                 'channel' => $this->queue->getChannel(),
                 'id' => $id,
@@ -116,6 +130,7 @@ class NsqConsumer extends AbstractConsumer
             } catch (Throwable $e) {
                 $this->logger->error(format_throwable($e));
             }
+
             return Result::DROP;
         }
 
@@ -137,13 +152,23 @@ class NsqConsumer extends AbstractConsumer
                 throw new InvalidArgumentException('Job popped is empty.');
             }
             $this->queue->attemptsIncr($id);
-            echo Color::GREEN, sprintf('Task ID:[%s] Time:[%s] start execution#.', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
-            is_callable($job) ? $job() : $this->pipeline->send($job)
-                ->through($job->middleware())
-                ->then(function (JobInterface $job) {
+            echo Color::GREEN, sprintf(
+                'Task ID:[%s] Time:[%s] start execution#.',
+                $id,
+                Carbon::now()->toDateTimeString()
+            ), ' ', Color::CYAN, PHP_EOL;
+            is_callable($job)
+                ? $job()
+                : $this->pipeline->send($job)
+                    ->through($job->middleware())
+                    ->then(function (JobInterface $job) {
                     $job->handle();
                 });
-            echo Color::YELLOW, sprintf('Task ID:[%s] Time:[%s] completed#.', $id, Carbon::now()->toDateTimeString()), ' ', Color::CYAN, PHP_EOL;
+            echo Color::YELLOW, sprintf(
+                'Task ID:[%s] Time:[%s] completed#.',
+                $id,
+                Carbon::now()->toDateTimeString()
+            ), ' ', Color::CYAN, PHP_EOL;
             $this->queue->remove($id);
         } catch (Throwable $throwable) {
             $attempts = (int) ($attempts ?? 0);
@@ -166,13 +191,15 @@ class NsqConsumer extends AbstractConsumer
                 $this->queue->failed($id, json_encode($payload, JSON_THROW_ON_ERROR));
                 $job->failed($id, $payload);
             }
-            $this->logger->error(sprintf(
+            $error = sprintf(
                 'Error when job executed: [%s]:[%s] detected in %s::%d.',
                 get_class($throwable),
                 $throwable->getMessage(),
                 $throwable->getFile(),
                 $throwable->getLine()
-            ), [
+            );
+            $this->ding->text($error);
+            $this->logger->error($error, [
                 'driver' => get_class($this->queue),
                 'channel' => $this->queue->getChannel(),
                 'id' => $id,
@@ -191,7 +218,11 @@ class NsqConsumer extends AbstractConsumer
 
     protected function tick(): void
     {
-        $this->logger->info(sprintf('TimerTick#[%s] Execute Time:%s', $this->timerId, Carbon::now()->toDateTimeString()));
+        $this->logger->info(sprintf(
+            'TimerTick#[%s] Execute Time:%s',
+            $this->timerId,
+            Carbon::now()->toDateTimeString()
+        ));
         $this->queue->migrateExpired();
     }
 }

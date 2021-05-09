@@ -25,6 +25,7 @@ class SimpleJob implements JobInterface
 
     public function handle(): void
     {
+//        throw new \Exception('测试钉钉');
         echo 'Task ' . $this->task->id . PHP_EOL;
     }
 

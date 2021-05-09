@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b2636f3fc326892a7b1d33f80ed837cd",
+    "content-hash": "d6d52cbc93cef2d592119f9b277a4e3f",
     "packages": [
         {
             "name": "bandwidth-throttle/token-bucket",
@@ -924,6 +924,63 @@
                 "source": "https://github.com/vinkla/hashids/tree/4.1.0"
             },
             "time": "2020-11-26T19:24:33+00:00"
+        },
+        {
+            "name": "hyperf-glory/alert-manager",
+            "version": "v0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Hyperf-Glory/alert-manager.git",
+                "reference": "208e0a4c26a7df091fdcb17f22d278300e4cf3ed"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Hyperf-Glory/alert-manager/zipball/208e0a4c26a7df091fdcb17f22d278300e4cf3ed",
+                "reference": "208e0a4c26a7df091fdcb17f22d278300e4cf3ed",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.14",
+                "mockery/mockery": "^1.0",
+                "phpstan/phpstan": "^0.12",
+                "phpunit/phpunit": ">=7.0",
+                "swoole/ide-helper": "dev-master",
+                "swow/swow": "dev-develop",
+                "symfony/var-dumper": "^5.1"
+            },
+            "type": "library",
+            "extra": {
+                "hyperf": {
+                    "config": "HyperfGlory\\AlertManager\\ConfigProvider"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "HyperfGlory\\AlertManager\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "keywords": [
+                "hyperf",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/Hyperf-Glory/alert-manager/issues",
+                "source": "https://github.com/Hyperf-Glory/alert-manager/tree/v0.2"
+            },
+            "time": "2021-05-08T01:57:05+00:00"
         },
         {
             "name": "hyperf/amqp",
