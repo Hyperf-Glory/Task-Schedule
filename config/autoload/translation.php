@@ -6,12 +6,8 @@ declare(strict_types=1);
  *
  * @license  https://github.com/Hyperf-Glory/Task-Schedule/main/LICENSE
  */
-use App\Exception\Handler\BusinessExceptionHandler;
-
 return [
-    'handler' => [
-        'http' => [
-            BusinessExceptionHandler::class,
-        ],
-    ],
+    'locale' => 'zh_CN',
+    'fallback_locale' => 'en',
+    'path' => BASE_PATH . '/storage/languages',
 ];

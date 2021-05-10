@@ -159,8 +159,8 @@ class NsqConsumer extends AbstractConsumer
                 : $this->pipeline->send($job)
                     ->through($job->middleware())
                     ->then(function (JobInterface $job) {
-                    $job->handle();
-                });
+                        $job->handle();
+                    });
             echo Color::YELLOW, sprintf(
                 'Task ID:[%s] Time:[%s] completed#.',
                 $id,
