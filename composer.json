@@ -47,6 +47,7 @@
         "hyperf/view": "^2.1",
         "hyperf/view-engine": "2.1.*",
         "jeremeamia/superclosure": "^2.4",
+        "limingxinleo/hyperf-utils": "^3.0",
         "multiplex/multiplex": "^0.1.0",
         "multiplex/socket": "^0.1.4"
     },
