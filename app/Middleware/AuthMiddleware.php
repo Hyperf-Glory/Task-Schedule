@@ -8,14 +8,19 @@ declare(strict_types=1);
  */
 namespace App\Middleware;
 
+use App\Kernel\Http\Response;
 use App\Service\ApplicationService;
+use Exception;
 use Hyperf\Di\Annotation\Inject;
+use Hyperf\HttpMessage\Stream\SwooleStream;
 use Hyperf\Utils\Arr;
+use Hyperf\Utils\Codec\Json;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Throwable;
 
 class AuthMiddleware implements MiddlewareInterface
 {
@@ -31,11 +36,17 @@ class AuthMiddleware implements MiddlewareInterface
     private $_applicationService;
 
     /**
+     * @var Response
+     */
+    private $httpResponse;
+
+    /**
      * 初始化方法.
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(ContainerInterface $container, Response $httpResponse)
     {
         $this->container = $container;
+        $this->httpResponse = $httpResponse;
     }
 
     /**
@@ -51,26 +62,23 @@ class AuthMiddleware implements MiddlewareInterface
         try {
             $validator = $this->_checkSignature($request);
 
-            if (Arr::get($validator, 'code') != 200) {
-                throw new \Exception(Arr::get($validator, 'message'));
+            if (Arr::get($validator, 'code') !== 200) {
+                throw new Exception(Arr::get($validator, 'message'));
             }
 
             $status = ['code' => 200, 'data' => [], 'message' => ''];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $status['message'] = $e->getMessage();
         }
 
-        return ($status['code'] == 0) ? withJson($status) : $handler->handle($request);
+        return ($status['code'] === 0) ? $this->httpResponse->response()
+            ->withBody(new SwooleStream(Json::encode($status))) : $handler->handle($request);
     }
 
     /**
      * 校验签名.
-     *
-     * @param Request|ServerRequestInterface $request
-     *
-     * @return array
      */
-    private function _checkSignature(ServerRequestInterface $request)
+    private function _checkSignature(ServerRequestInterface $request): array
     {
         $status = ['code' => 0, 'data' => [], 'message' => ''];
 
@@ -84,47 +92,47 @@ class AuthMiddleware implements MiddlewareInterface
             $version = $request->getHeaderLine('version');
 
             if (empty($appKey)) {
-                throw new \Exception('APP KEY不能为空！');
+                throw new Exception('APP KEY不能为空！');
             }
 
             // 获取加密密钥
             $application = $this->_applicationService->getApplicationInfo($appKey);
-            $secretkey = Arr::get($application, 'data.secret_key');
+            $secretKey = Arr::get($application, 'data.secret_key');
 
-            if (empty($secretkey)) {
-                throw new \Exception('应用不存在或者未审核！');
+            if (empty($secretKey)) {
+                throw new Exception('应用不存在或者未审核！');
             }
 
             if (empty($nonceStr) || strlen($nonceStr) < 6) {
-                throw new \Exception('随机字符串不能小于6位！');
+                throw new Exception('随机字符串不能小于6位！');
             }
 
             if (empty($timestamp)) {
-                throw new \Exception('请求日期不能为空！');
+                throw new Exception('请求日期不能为空！');
             }
 
             $now = strtotime($timestamp);
 
             if (empty($now)) {
-                throw new \Exception('请求日期格式有误！');
+                throw new Exception('请求日期格式有误！');
             }
 
             $now = time() - $now;
 
             if ($now > 300 || $now < -300) {
-                throw new \Exception('请求时间与系统偏差过大！');
+                throw new Exception('请求时间与系统偏差过大！');
             }
 
             if (empty($signature)) {
-                throw new \Exception('签名数据不能为空！');
+                throw new Exception('签名数据不能为空！');
             }
 
             if (empty($version)) {
-                throw new \Exception('版本号不能为空！');
+                throw new Exception('版本号不能为空！');
             }
 
-            if ($version != '1.0') {
-                throw new \Exception('版本号输入有误！');
+            if ($version !== '1.0') {
+                throw new Exception('版本号输入有误！');
             }
 
             $data['app_key'] = $appKey;
@@ -137,14 +145,14 @@ class AuthMiddleware implements MiddlewareInterface
             $str = http_build_query($data, '', '&');
             $str = urldecode($str);
 
-            $signStr = md5($str . $secretkey);
+            $signStr = md5($str . $secretKey);
 
             if ($signature !== $signStr) {
-                throw new \Exception('签名校验失败！');
+                throw new Exception('签名校验失败！');
             }
 
             $status = ['code' => 200, 'data' => [], 'message' => ''];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $status['message'] = $e->getMessage();
         }
 
