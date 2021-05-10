@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace App\Kernel\Nsq;
 
 use App\Constants\Serializer;
+use App\Event\Message;
 use App\Kernel\Redis\LuaScript;
 use App\Schedule\AbstractQueue;
 use App\Schedule\JobInterface;
@@ -102,7 +103,10 @@ class Queue extends AbstractQueue
                 }
                 $queue->push($id);
             } catch (Throwable $throwable) {
-                $this->ding->text(sprintf('Error in Redis operation or channel push [%s]', $throwable->getMessage()));
+                $this->eventDispatcher->dispatch(new Message(sprintf(
+                    'Error in Redis operation or channel push [%s]',
+                    $throwable->getMessage()
+                )));
                 $this->logger->error(sprintf(
                     'Error in Redis operation or channel push [%s]',
                     $throwable->getMessage()
@@ -127,7 +131,10 @@ class Queue extends AbstractQueue
                     $this->logger->warning('Warning when job nsq push fail.');
                 }
             } catch (Throwable $e) {
-                $this->ding->text(sprintf('Error when job push fail.Message: [%s].', $e->getMessage()));
+                $this->eventDispatcher->dispatch(new Message(sprintf(
+                    'Error when job push fail.Message: [%s].',
+                    $e->getMessage()
+                )));
                 $this->logger->error(sprintf('Error when job push fail.Message: [%s].', $e->getMessage()));
             }
         });

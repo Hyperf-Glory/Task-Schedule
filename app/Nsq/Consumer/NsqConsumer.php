@@ -22,9 +22,9 @@ use Hyperf\Nsq\Nsq;
 use Hyperf\Nsq\Result;
 use Hyperf\Utils\Coroutine;
 use Hyperf\Utils\Pipeline;
-use HyperfGlory\AlertManager\DingTalk;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use ReflectionClass;
 use Swoole\Timer;
 use Throwable;
@@ -69,10 +69,7 @@ class NsqConsumer extends AbstractConsumer
      */
     protected $timerId;
 
-    /**
-     * @var \HyperfGlory\AlertManager\DingTalk
-     */
-    protected $ding;
+    protected $eventDispatcher;
 
     /**
      * @var int
@@ -97,7 +94,7 @@ class NsqConsumer extends AbstractConsumer
         $this->objectSerializer = $this->container->get(ObjectSerializer::class);
         $this->pipeline = $this->container->get(Pipeline::class);
         $this->logger = $this->container->get(StdoutLoggerInterface::class);
-        $this->ding = make(DingTalk::class);
+        $this->eventDispatcher = $this->container->get(EventDispatcherInterface::class);
         $this->logger->info(sprintf('TimerTickID#%s started.', $this->timerId));
     }
 
@@ -198,7 +195,7 @@ class NsqConsumer extends AbstractConsumer
                 $throwable->getFile(),
                 $throwable->getLine()
             );
-            $this->ding->text($error);
+            $this->eventDispatcher->dispatch(new \App\Event\Message($error));
             $this->logger->error($error, [
                 'driver' => get_class($this->queue),
                 'channel' => $this->queue->getChannel(),

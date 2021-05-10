@@ -16,7 +16,7 @@ use Hyperf\Nsq\Nsq;
 use Hyperf\Redis\RedisFactory;
 use Hyperf\Redis\RedisProxy;
 use Hyperf\Utils\ApplicationContext;
-use HyperfGlory\AlertManager\DingTalk;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractQueue implements QueueInterface
 {
@@ -76,9 +76,9 @@ abstract class AbstractQueue implements QueueInterface
     protected $redisPool;
 
     /**
-     * @var \HyperfGlory\AlertManager\DingTalk
+     * @var mixed|\Psr\EventDispatcher\EventDispatcherInterface
      */
-    protected $ding;
+    protected $eventDispatcher;
 
     /**
      * @var StdoutLoggerInterface
@@ -93,7 +93,7 @@ abstract class AbstractQueue implements QueueInterface
         $this->closureSerializer = make(ClosureSerializer::class);
         $this->jsonSerializer = make(JsonSerializer::class);
         $this->logger = ApplicationContext::getContainer()->get(StdoutLoggerInterface::class);
-        $this->ding = make(DingTalk::class);
+        $this->eventDispatcher = ApplicationContext::getContainer()->get(EventDispatcherInterface::class);
     }
 
     /**
