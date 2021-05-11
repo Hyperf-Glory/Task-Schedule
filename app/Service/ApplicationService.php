@@ -10,18 +10,24 @@ namespace App\Service;
 
 use App\Model\Application;
 use Exception;
+use Han\Utils\Service;
 use Hyperf\Redis\Redis;
+use Psr\Container\ContainerInterface;
 
-class ApplicationService
+class ApplicationService extends Service
 {
+    /**
+     * @var Application
+     */
     protected $_applicationModel;
 
     protected $redis;
 
-    public function __construct(Application $application, Redis $redis)
+    public function __construct(ContainerInterface $container)
     {
-        $this->_applicationModel = $application;
-        $this->redis = $redis;
+        parent::__construct($container);
+        $this->_applicationModel = make(Application::class);
+        $this->redis = $this->container->get(Redis::class);
     }
 
     public function getApplicationInfo(string $key = null): array

@@ -60,7 +60,7 @@ class AuthMiddleware implements MiddlewareInterface
         $status = ['code' => 0, 'data' => [], 'message' => ''];
 
         try {
-            $validator = $this->_checkSignature($request);
+            $validator = $this->checkSignature($request);
 
             if (Arr::get($validator, 'code') !== 200) {
                 throw new Exception(Arr::get($validator, 'message'));
@@ -78,7 +78,7 @@ class AuthMiddleware implements MiddlewareInterface
     /**
      * 校验签名.
      */
-    private function _checkSignature(ServerRequestInterface $request): array
+    private function checkSignature(ServerRequestInterface $request): array
     {
         $status = ['code' => 0, 'data' => [], 'message' => ''];
 
