@@ -143,6 +143,56 @@ class TaskService extends Service
     }
 
     /**
+     * 任务重试.
+     */
+    public function retry(string $key, int $taskId): array
+    {
+        $status = ['code' => 0, 'data' => [], 'message' => ''];
+
+        try {
+            if (empty($key)) {
+                throw new Exception('APP KEY 不能为空!');
+            }
+
+            if (empty($taskId)) {
+                throw new Exception('任务ID不能为空!');
+            }
+
+            $task = Task::newModelInstance()->where(['is_deleted' => 0, 'id' => $taskId])->find();
+
+            if (empty($task)) {
+                throw new Exception('任务ID输入有误!');
+            }
+
+            $application = $this->applicationService->getApplicationInfo($key);
+
+            if (Arr::get($application, 'code') !== 200) {
+                throw new Exception(Arr::get($application, 'message'));
+            }
+
+            $application = Arr::get($application, 'data');
+
+            $data = [
+                'appKey' => Arr::get($task, 'app_key'),
+                'secretKey' => Arr::get($application, 'secret_key'),
+                'taskNo' => Arr::get($task, 'task_no'),
+                'linkUrl' => Arr::get($application, 'link_url'),
+                'retryTotal' => Arr::get($application, 'retry_total', 5),
+                'retryNum' => 0,
+                'step' => Arr::get($task, 'step'),
+                'content' => Arr::get($task, 'content'),
+            ];
+            //TODO 投递任务
+
+            $status = ['code' => 200, 'data' => [], 'message' => ''];
+        } catch (\Throwable $e) {
+            $status['message'] = $e->getMessage();
+        }
+
+        return $status;
+    }
+
+    /**
      * @param float|int $delay
      *
      * @throws \ReflectionException

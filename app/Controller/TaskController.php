@@ -72,5 +72,12 @@ class TaskController extends AbstractController
      */
     public function retry(TaskRequest $request): ResponseInterface
     {
+        try {
+            $data = $this->validator($request->all(), Arr::only($request->rules(), 'taskId'), $request->messages());
+            $appKey = $request->getHeaderLine('app_key');
+
+        } catch (Throwable $exception) {
+            return $this->response->success($exception->getMessage());
+        }
     }
 }
