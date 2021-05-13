@@ -135,7 +135,7 @@ class TaskService extends Service
             }
 
             $status = ['code' => 200, 'data' => $data, 'message' => ''];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $status['message'] = $e->getMessage();
         }
 
@@ -169,23 +169,9 @@ class TaskService extends Service
             if (Arr::get($application, 'code') !== 200) {
                 throw new Exception(Arr::get($application, 'message'));
             }
-
-            $application = Arr::get($application, 'data');
-
-            $data = [
-                'appKey' => Arr::get($task, 'app_key'),
-                'secretKey' => Arr::get($application, 'secret_key'),
-                'taskNo' => Arr::get($task, 'task_no'),
-                'linkUrl' => Arr::get($application, 'link_url'),
-                'retryTotal' => Arr::get($application, 'retry_total', 5),
-                'retryNum' => 0,
-                'step' => Arr::get($task, 'step'),
-                'content' => Arr::get($task, 'content'),
-            ];
-            //TODO 投递任务
-
+            $this->makeTask($taskId);
             $status = ['code' => 200, 'data' => [], 'message' => ''];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $status['message'] = $e->getMessage();
         }
 

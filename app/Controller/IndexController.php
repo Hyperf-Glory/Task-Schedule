@@ -103,4 +103,11 @@ class IndexController extends AbstractController
             echo $e->getMessage();
         }
     }
+
+    /**
+     * 创建应用.
+     */
+    public function application()
+    {
+    }
 }

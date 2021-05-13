@@ -62,4 +62,8 @@ class ApplicationService extends Service
 
         return $status;
     }
+
+    public function create(): void
+    {
+    }
 }

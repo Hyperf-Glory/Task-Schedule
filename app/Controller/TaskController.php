@@ -75,7 +75,12 @@ class TaskController extends AbstractController
         try {
             $data = $this->validator($request->all(), Arr::only($request->rules(), 'taskId'), $request->messages());
             $appKey = $request->getHeaderLine('app_key');
-
+            $taskId = $data['taskId'];
+            $result = $this->taskService->retry($appKey, (int) $taskId);
+            if (Arr::get($result, 'code') !== 200) {
+                throw new Exception(Arr::get($result, 'message'));
+            }
+            return $this->response->success('', Arr::get($result, 'data'));
         } catch (Throwable $exception) {
             return $this->response->success($exception->getMessage());
         }
