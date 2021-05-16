@@ -13,10 +13,15 @@ use App\Job\SimpleJob;
 use App\Kernel\Nsq\Queue;
 use App\Kernel\Redis\Lua\Incr;
 use App\Model\Task;
+use App\Request\TaskRequest;
+use App\Service\ApplicationService;
+use Exception;
 use Hyperf\Dag\Vertex;
+use Hyperf\Utils\Arr;
 use Hyperf\View\RenderInterface;
 use HyperfGlory\AlertManager\DingTalk;
 use Psr\Http\Message\ResponseInterface;
+use Throwable;
 
 class IndexController extends AbstractController
 {
@@ -24,6 +29,13 @@ class IndexController extends AbstractController
      * @var array<Vertex>
      */
     public $vertex;
+
+    protected $application;
+
+    public function __construct()
+    {
+        $this->application = make(ApplicationService::class);
+    }
 
     public function index(RenderInterface $render): ResponseInterface
     {
@@ -52,7 +64,7 @@ class IndexController extends AbstractController
                 'pie' => $pie,
                 'line' => $line,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error($e->getMessage());
         }
 
@@ -69,7 +81,7 @@ class IndexController extends AbstractController
             $job = new SimpleJob($task);
             $queue = new Queue('queue');
             $queue->push($job);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             dump($e->getMessage());
         }
     }
@@ -99,7 +111,7 @@ class IndexController extends AbstractController
              */
             $dingtalk = make(DingTalk::class);
             $dingtalk->text('呵呵');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             echo $e->getMessage();
         }
     }
@@ -107,7 +119,19 @@ class IndexController extends AbstractController
     /**
      * 创建应用.
      */
-    public function application()
+    public function application(TaskRequest $request): ?ResponseInterface
     {
+        try {
+            $data = $this->validator($request->all(), $request->rules(), $request->messages());
+            $appKey = $request->getHeaderLine('app_key');
+            $results = $this->application->create($appKey, $data);
+            if (Arr::get($results, 'code') !== 200) {
+                throw new Exception(Arr::get($results, 'message'));
+            }
+
+            return $this->response->success('', Arr::get($results, 'data'));
+        } catch (Throwable $exception) {
+            return $this->response->success($exception->getMessage());
+        }
     }
 }

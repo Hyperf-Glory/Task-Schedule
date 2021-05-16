@@ -12,6 +12,8 @@ use App\Model\Application;
 use Exception;
 use Han\Utils\Service;
 use Hyperf\Redis\Redis;
+use Hyperf\Utils\Arr;
+use Hyperf\Utils\Str;
 use Psr\Container\ContainerInterface;
 
 class ApplicationService extends Service
@@ -63,7 +65,45 @@ class ApplicationService extends Service
         return $status;
     }
 
-    public function create(): void
+    public function create(array $request): array
     {
+        $status = ['code' => 0, 'data' => [], 'message' => ''];
+
+        try {
+            if (empty($request)) {
+                throw new \Exception('提交数据不能为空!');
+            }
+
+            $appKey = Str::random(16);
+            $secretKey = Str::random(32);
+
+            $data = [
+                'status' => 1,
+                'app_key' => $appKey,
+                'app_name' => Arr::get($request, 'appName'),
+                'secret_key' => $secretKey,
+                'step' => (int) Arr::get($request, 'step', 0),
+                'retry_total' => (int) Arr::get($request, 'retryTotal', 5),
+                'link_url' => Arr::get($request, 'linkUrl'),
+                'remark' => Arr::get($request, 'remark'),
+                'created_at' => time(),
+            ];
+
+            $query = $this->_applicationModel->insertGetId($data);
+
+            if (empty($query)) {
+                throw new \Exception('任务添加失败!');
+            }
+
+            $status = [
+                'code' => 200,
+                'data' => ['appKey' => $appKey, 'secretKey' => $secretKey],
+                'message' => '',
+            ];
+        } catch (\Throwable $e) {
+            $status['message'] = $e->getMessage();
+        }
+
+        return $status;
     }
 }
