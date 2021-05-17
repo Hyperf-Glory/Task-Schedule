@@ -30,6 +30,9 @@ class IndexController extends AbstractController
      */
     public $vertex;
 
+    /**
+     * @var ApplicationService
+     */
     protected $application;
 
     public function __construct()
@@ -123,8 +126,7 @@ class IndexController extends AbstractController
     {
         try {
             $data = $this->validator($request->all(), $request->rules(), $request->messages());
-            $appKey = $request->getHeaderLine('app_key');
-            $results = $this->application->create($appKey, $data);
+            $results = $this->application->create($data);
             if (Arr::get($results, 'code') !== 200) {
                 throw new Exception(Arr::get($results, 'message'));
             }

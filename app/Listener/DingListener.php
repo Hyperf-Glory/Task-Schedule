@@ -48,7 +48,9 @@ class DingListener implements ListenerInterface
              */
             $ding = make(DingTalk::class);
             if (method_exists($ding, $event->type)) {
-                call_user_func([$ding, $event->type], $event->message);
+                $ding->{$event->type}($event->message);
+
+                return;
             }
             $this->logger->error(sprintf('DingTalk Action[%s] UnKnown ', $event->type));
         }
